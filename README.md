@@ -17,6 +17,20 @@ npm run db:push                            # create/update the SQLite schema (ne
 npm run dev
 ```
 
+## Connecting social accounts
+
+Accounts are connected with OAuth on the **Integrations** page — you sign in on the platform's own
+page and Social Sanity stores only an encrypted access token. Each platform needs a developer app:
+
+- **LinkedIn** — create an app at <https://www.linkedin.com/developers/apps>, add the
+  _Share on LinkedIn_ and _Sign In with LinkedIn using OpenID Connect_ products, register the
+  redirect URI shown on the Integrations page, and set `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`.
+  Tokens last 60 days; reconnect when the page warns you.
+- **Instagram** — create a Meta app with _Instagram API with Instagram Login_ at
+  <https://developers.facebook.com/apps>, add your Professional account as a tester, register the
+  redirect URI (must be HTTPS — set `PUBLIC_BASE_URL` to a tunnel or real host), and set
+  `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET`. Tokens are refreshed automatically.
+
 ## Scripts
 
 | Command                           | Purpose                                   |

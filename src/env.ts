@@ -1,5 +1,7 @@
 import { defineEnvVars } from '@sveltejs/kit/env';
 
+const optional = (value: string | undefined) => value || undefined;
+
 export const variables = defineEnvVars({
 	DATABASE_URL: { description: 'Path to the SQLite database file.' },
 	APP_PASSWORD_HASH: {
@@ -25,5 +27,17 @@ export const variables = defineEnvVars({
 			if (key.length !== 32) throw new Error('TOKEN_ENC_KEY must be 32 bytes, base64-encoded');
 			return key;
 		}
-	}
+	},
+	PUBLIC_BASE_URL: {
+		description:
+			'Public origin of this app (e.g. https://social.example.com). Used for OAuth redirect URIs and media URLs. Defaults to the request origin.',
+		schema: (value) => (value ? value.replace(/\/$/, '') : undefined)
+	},
+	LINKEDIN_CLIENT_ID: { description: 'LinkedIn OAuth client ID.', schema: optional },
+	LINKEDIN_CLIENT_SECRET: { description: 'LinkedIn OAuth client secret.', schema: optional },
+	INSTAGRAM_APP_ID: {
+		description: 'Instagram app ID (Instagram API with Instagram Login).',
+		schema: optional
+	},
+	INSTAGRAM_APP_SECRET: { description: 'Instagram app secret.', schema: optional }
 });

@@ -8,7 +8,10 @@
 
 	let { data, children }: LayoutProps = $props();
 
-	const navItems: NavItem[] = [{ href: resolve('/'), label: 'Home' }];
+	const navItems: NavItem[] = [
+		{ href: resolve('/'), label: 'Home', match: '/' },
+		{ href: resolve('/integrations'), label: 'Integrations', match: '/integrations' }
+	];
 </script>
 
 <svelte:head>
