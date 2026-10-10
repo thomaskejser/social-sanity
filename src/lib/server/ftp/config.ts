@@ -1,8 +1,10 @@
 import { variables } from '../../../env.ts';
 
+export type FileServerProtocol = 'ftp' | 'sftp';
 export type FtpEncryption = 'explicit' | 'implicit' | 'none';
 
 export type FtpConfig = {
+	protocol: FileServerProtocol;
 	host: string;
 	port: number;
 	username: string;
@@ -15,11 +17,12 @@ export type FtpConfig = {
 export type FtpFormValues = Record<keyof FtpConfig, string>;
 export type FtpFormErrors = Partial<Record<keyof FtpConfig, string>>;
 
-export const DEFAULT_PORTS: Record<FtpEncryption, number> = {
-	explicit: 21,
-	implicit: 990,
-	none: 21
-};
+const FTP_PORTS: Record<FtpEncryption, number> = { explicit: 21, implicit: 990, none: 21 };
+export const SFTP_PORT = 22;
+
+export function defaultPort(protocol: FileServerProtocol, encryption: FtpEncryption): number {
+	return protocol === 'sftp' ? SFTP_PORT : FTP_PORTS[encryption];
+}
 
 const ENV_VAR_NAME = /^[A-Z][A-Z0-9_]*$/;
 const HOST = /^[A-Za-z0-9.\-:[\]]+$/;
@@ -57,6 +60,7 @@ export function parseFtpForm(
 	form: FormData
 ): { ok: true; config: FtpConfig } | { ok: false; values: FtpFormValues; errors: FtpFormErrors } {
 	const values: FtpFormValues = {
+		protocol: field(form, 'protocol') || 'ftp',
 		host: field(form, 'host'),
 		port: field(form, 'port'),
 		username: field(form, 'username'),
@@ -72,16 +76,23 @@ export function parseFtpForm(
 	else if (!HOST.test(values.host) || values.host.length > 253)
 		errors.host = 'Not a valid hostname or IP address.';
 
-	const encryption = (['explicit', 'implicit', 'none'] as const).find(
-		(e) => e === values.encryption
-	);
+	const protocol = (['ftp', 'sftp'] as const).find((p) => p === values.protocol);
+	if (!protocol) errors.protocol = 'Choose FTP or SFTP.';
+
+	// SFTP is always encrypted (SSH), so the FTP encryption setting is irrelevant there.
+	const encryption =
+		protocol === 'sftp'
+			? 'explicit'
+			: (['explicit', 'implicit', 'none'] as const).find((e) => e === values.encryption);
 	if (!encryption) errors.encryption = 'Choose an encryption mode.';
 
-	const port = values.port ? Number(values.port) : DEFAULT_PORTS[encryption ?? 'explicit'];
+	const port = values.port
+		? Number(values.port)
+		: defaultPort(protocol ?? 'ftp', encryption ?? 'explicit');
 	if (!Number.isInteger(port) || port < 1 || port > 65535)
 		errors.port = 'Port must be between 1 and 65535.';
 
-	if (!values.username) errors.username = 'Enter the FTP username.';
+	if (!values.username) errors.username = 'Enter the username.';
 
 	const envError = validateEnvVarName(values.passwordEnvVar);
 	if (envError) errors.passwordEnvVar = envError;
@@ -100,10 +111,12 @@ export function parseFtpForm(
 		}
 	}
 
-	if (Object.keys(errors).length > 0 || !encryption) return { ok: false, values, errors };
+	if (Object.keys(errors).length > 0 || !encryption || !protocol)
+		return { ok: false, values, errors };
 	return {
 		ok: true,
 		config: {
+			protocol,
 			host: values.host,
 			port,
 			username: values.username,

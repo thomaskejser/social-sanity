@@ -8,6 +8,7 @@ function form(fields: Record<string, string>) {
 }
 
 const valid = {
+	protocol: 'ftp',
 	host: 'ftp.example.com',
 	port: '',
 	username: 'uploader',
@@ -22,6 +23,7 @@ describe('parseFtpForm', () => {
 		expect(parseFtpForm(form(valid))).toEqual({
 			ok: true,
 			config: {
+				protocol: 'ftp',
 				host: 'ftp.example.com',
 				port: 21,
 				username: 'uploader',
@@ -36,6 +38,23 @@ describe('parseFtpForm', () => {
 	it('defaults implicit FTPS to port 990', () => {
 		const result = parseFtpForm(form({ ...valid, encryption: 'implicit' }));
 		expect(result.ok && result.config.port).toBe(990);
+	});
+
+	it('defaults SFTP to port 22 and ignores the FTP encryption setting', () => {
+		const result = parseFtpForm(form({ ...valid, protocol: 'sftp', encryption: '' }));
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.config.protocol).toBe('sftp');
+		expect(result.config.port).toBe(22);
+	});
+
+	it('treats a missing protocol as FTP and rejects unknown ones', () => {
+		const { protocol: _omitted, ...withoutProtocol } = valid;
+		void _omitted;
+		const result = parseFtpForm(form(withoutProtocol));
+		expect(result.ok && result.config.protocol).toBe('ftp');
+		const bad = parseFtpForm(form({ ...valid, protocol: 'scp' }));
+		expect(!bad.ok && bad.errors.protocol).toBeTruthy();
 	});
 
 	it('accepts IP addresses', () => {

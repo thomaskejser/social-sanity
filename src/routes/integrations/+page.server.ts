@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { testFtpConnection } from '#lib/server/ftp/client.ts';
+import { testFileServer } from '#lib/server/ftp/transfer.ts';
 import { parseFtpForm, readPassword } from '#lib/server/ftp/config.ts';
 import {
 	deleteFtpServer,
@@ -44,6 +44,7 @@ export const load: PageServerLoad = ({ url }) => {
 		}),
 		ftp: ftp
 			? {
+					protocol: ftp.protocol,
 					host: ftp.host,
 					port: ftp.port,
 					username: ftp.username,
@@ -51,6 +52,7 @@ export const load: PageServerLoad = ({ url }) => {
 					encryption: ftp.encryption,
 					remoteDir: ftp.remoteDir,
 					publicUrl: ftp.publicUrl,
+					hostKeyFingerprint: ftp.hostKeyFingerprint,
 					// Only whether the variable is set — never its value.
 					passwordSet: readPassword(ftp.passwordEnvVar) !== undefined,
 					lastTestedAt: ftp.lastTestedAt,
@@ -80,10 +82,10 @@ export const actions: Actions = {
 
 	testFtp: async () => {
 		const server = getFtpServer();
-		if (!server) return fail(400, { error: 'Save the FTP settings first.' });
+		if (!server) return fail(400, { error: 'Save the file server settings first.' });
 		try {
-			const message = await testFtpConnection(server);
-			recordFtpTest(true, message);
+			const { message, hostKeyFingerprint } = await testFileServer(server);
+			recordFtpTest(true, message, hostKeyFingerprint);
 			return { ftpTest: { ok: true, message } };
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);

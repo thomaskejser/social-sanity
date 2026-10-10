@@ -5,7 +5,7 @@ import { readPassword, type FtpConfig } from './config.ts';
 
 const TIMEOUT_MS = 15_000;
 
-export class FtpError extends Error {}
+import { FileServerError } from './errors.ts';
 
 /** Adds a plain-language hint to common low-level FTP failures. */
 export function explainFtpError(
@@ -33,7 +33,7 @@ export function explainFtpError(
 async function withClient<T>(config: FtpConfig, run: (client: Client) => Promise<T>): Promise<T> {
 	const password = readPassword(config.passwordEnvVar);
 	if (password === undefined) {
-		throw new FtpError(`Environment variable ${config.passwordEnvVar} is not set.`);
+		throw new FileServerError(`Environment variable ${config.passwordEnvVar} is not set.`);
 	}
 	const client = new Client(TIMEOUT_MS);
 	try {
@@ -48,8 +48,8 @@ async function withClient<T>(config: FtpConfig, run: (client: Client) => Promise
 		await client.ensureDir(config.remoteDir);
 		return await run(client);
 	} catch (error) {
-		if (error instanceof FtpError) throw error;
-		throw new FtpError(
+		if (error instanceof FileServerError) throw error;
+		throw new FileServerError(
 			explainFtpError(error instanceof Error ? error.message : String(error), config)
 		);
 	} finally {
@@ -58,7 +58,7 @@ async function withClient<T>(config: FtpConfig, run: (client: Client) => Promise
 }
 
 /** Logs in, enters the remote directory, and writes then deletes a small file to prove write access. */
-export async function testFtpConnection(config: FtpConfig): Promise<string> {
+export async function testFtp(config: FtpConfig): Promise<string> {
 	return withClient(config, async (client) => {
 		const probe = `.social-sanity-test-${randomBytes(4).toString('hex')}.txt`;
 		await client.uploadFrom(Readable.from(['Social Sanity connection test\n']), probe);
@@ -68,22 +68,17 @@ export async function testFtpConnection(config: FtpConfig): Promise<string> {
 	});
 }
 
-/** Uploads a file into the configured directory. Returns its public URL when one is configured. */
+/** Uploads a file into the configured directory and returns its remote path. */
 export async function uploadToFtp(
 	config: FtpConfig,
 	fileName: string,
 	contents: Readable | Buffer
-): Promise<{ remotePath: string; publicUrl: string | null }> {
-	if (fileName.includes('/') || fileName.startsWith('.')) throw new FtpError('Invalid file name.');
+): Promise<string> {
 	return withClient(config, async (client) => {
 		await client.uploadFrom(
 			Buffer.isBuffer(contents) ? Readable.from([contents]) : contents,
 			fileName
 		);
-		const remotePath = `${(await client.pwd()).replace(/\/$/, '')}/${fileName}`;
-		return {
-			remotePath,
-			publicUrl: config.publicUrl ? `${config.publicUrl}/${encodeURIComponent(fileName)}` : null
-		};
+		return `${(await client.pwd()).replace(/\/$/, '')}/${fileName}`;
 	});
 }

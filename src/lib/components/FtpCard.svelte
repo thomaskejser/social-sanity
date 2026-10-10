@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	export type FtpView = {
+		protocol: 'ftp' | 'sftp';
 		host: string;
 		port: number;
 		username: string;
@@ -7,6 +8,7 @@
 		encryption: 'explicit' | 'implicit' | 'none';
 		remoteDir: string;
 		publicUrl: string | null;
+		hostKeyFingerprint: string | null;
 		passwordSet: boolean;
 		lastTestedAt: number | null;
 		lastTestOk: boolean | null;
@@ -26,10 +28,16 @@
 	import Button from './Button.svelte';
 	import DateTime from './DateTime.svelte';
 	import Form from './Form.svelte';
+	import RadioGroup from './RadioGroup.svelte';
 	import SelectField from './SelectField.svelte';
 	import TextField from './TextField.svelte';
 
 	let { server, form }: { server: FtpView | null; form: FtpFormState | null } = $props();
+
+	const PROTOCOL_OPTIONS = [
+		{ value: 'ftp', label: 'FTP', description: 'Classic FTP, optionally over TLS (FTPS).' },
+		{ value: 'sftp', label: 'SFTP', description: 'File transfer over SSH. Always encrypted.' }
+	];
 
 	const ENCRYPTION_OPTIONS = [
 		{ value: 'explicit', label: 'FTPS — explicit TLS (recommended)' },
@@ -41,6 +49,7 @@
 	// After a failed save, show what the user typed; otherwise show the saved settings.
 	const values = $derived(
 		form?.values ?? {
+			protocol: server?.protocol ?? 'ftp',
 			host: server?.host ?? '',
 			port: server ? String(server.port) : '',
 			username: server?.username ?? '',
@@ -51,11 +60,14 @@
 		}
 	);
 	const errors = $derived(form?.errors ?? {});
+	// Follows the saved/submitted value, but the radio can switch it locally before saving.
+	let protocol = $derived(values.protocol);
+	const isSftp = $derived(protocol === 'sftp');
 </script>
 
 <article class="integration-card integration-card--wide" aria-labelledby="integration-ftp">
 	<header class="integration-card__header">
-		<h2 id="integration-ftp">FTP file upload</h2>
+		<h2 id="integration-ftp">File upload (FTP / SFTP)</h2>
 		<Badge tone={status.tone}>{status.label}</Badge>
 	</header>
 
@@ -70,8 +82,13 @@
 			and restart the app.
 		</Alert>
 	{/if}
-	{#if values.encryption === 'none'}
+	{#if !isSftp && values.encryption === 'none'}
 		<Alert kind="warning">Plain FTP sends your password and files unencrypted.</Alert>
+	{/if}
+	{#if server?.protocol === 'sftp' && server.hostKeyFingerprint}
+		<p class="integration-card__test-result">
+			Pinned host key: <code>{server.hostKeyFingerprint}</code>
+		</p>
 	{/if}
 	{#if server?.lastTestedAt}
 		<p class="integration-card__test-result">
@@ -79,7 +96,14 @@
 		</p>
 	{/if}
 
-	<Form action="?/saveFtp" label="FTP server settings" variant="ftp" resetOnSuccess={false}>
+	<Form action="?/saveFtp" label="File server settings" variant="ftp" resetOnSuccess={false}>
+		<RadioGroup
+			legend="Protocol"
+			name="protocol"
+			options={PROTOCOL_OPTIONS}
+			bind:value={protocol}
+			error={errors.protocol}
+		/>
 		<TextField
 			label="Host name or IP address"
 			name="host"
@@ -93,7 +117,7 @@
 			name="port"
 			type="number"
 			value={values.port}
-			placeholder="21"
+			placeholder={isSftp ? '22' : '21'}
 			hint="Leave empty for the default."
 			error={errors.port}
 		/>
@@ -114,13 +138,15 @@
 			hint="Name of the variable holding the password, e.g. FTP_PASSWORD."
 			error={errors.passwordEnvVar}
 		/>
-		<SelectField
-			label="Encryption"
-			name="encryption"
-			options={ENCRYPTION_OPTIONS}
-			value={values.encryption}
-			error={errors.encryption}
-		/>
+		{#if !isSftp}
+			<SelectField
+				label="Encryption"
+				name="encryption"
+				options={ENCRYPTION_OPTIONS}
+				value={values.encryption}
+				error={errors.encryption}
+			/>
+		{/if}
 		<TextField
 			label="Remote directory"
 			name="remoteDir"

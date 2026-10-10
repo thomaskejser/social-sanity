@@ -22,15 +22,21 @@ export const accounts = sqliteTable('accounts', {
 
 export type Account = typeof accounts.$inferSelect;
 
-/** The FTP server files are uploaded to (single row, id = 1). The password is never stored — only
- * the name of the environment variable that holds it. */
+/** The FTP/SFTP server files are uploaded to (single row, id = 1). The password is never stored —
+ * only the name of the environment variable that holds it. */
 export const ftpServer = sqliteTable('ftp_server', {
 	id: integer('id').primaryKey(),
+	protocol: text('protocol', { enum: ['ftp', 'sftp'] })
+		.notNull()
+		.default('ftp'),
 	host: text('host').notNull(),
 	port: integer('port').notNull(),
 	username: text('username').notNull(),
 	passwordEnvVar: text('password_env_var').notNull(),
+	/** FTP only; ignored for SFTP, which is always encrypted. */
 	encryption: text('encryption', { enum: ['explicit', 'implicit', 'none'] }).notNull(),
+	/** SFTP only: SHA-256 fingerprint of the server's host key, pinned on the first successful test. */
+	hostKeyFingerprint: text('host_key_fingerprint'),
 	remoteDir: text('remote_dir').notNull(),
 	publicUrl: text('public_url'),
 	lastTestedAt: integer('last_tested_at'),

@@ -27,6 +27,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",
 		"@types/better-sqlite3": "^9.6.0",
 		"@types/node": "^24",
+		"@types/ssh2-sftp-client": "^9.0.6",
 		"@vitest/browser-playwright": "^4.1.8",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
@@ -52,6 +53,7 @@
 	"dependencies": {
 		"basic-ftp": "6.2.1",
 		"better-sqlite3": "^13.0.3",
-		"croner": "^10.0.1"
+		"croner": "^10.0.1",
+		"ssh2-sftp-client": "12.1.1"
 	}
 }
