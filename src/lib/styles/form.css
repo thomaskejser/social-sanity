@@ -1,0 +1,129 @@
+@layer base {
+	form {
+		display: grid;
+		gap: var(--space-m);
+	}
+
+	fieldset {
+		display: grid;
+		gap: var(--space-m);
+		padding: var(--space-m);
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--radius);
+	}
+
+	legend {
+		padding-inline: var(--space-2xs);
+		font-weight: 600;
+	}
+
+	label {
+		font-weight: 600;
+	}
+
+	input:where(:not([type='checkbox'], [type='radio'])),
+	select,
+	textarea {
+		inline-size: 100%;
+		min-block-size: var(--tap-target);
+		padding: var(--space-xs) var(--space-s);
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-surface);
+		transition: border-color var(--transition);
+
+		&:focus-visible {
+			outline: var(--focus-ring);
+			outline-offset: 1px;
+		}
+
+		&[aria-invalid='true'] {
+			border-color: var(--color-danger);
+		}
+	}
+
+	textarea {
+		resize: vertical;
+	}
+
+	button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		min-block-size: var(--tap-target);
+		padding: var(--space-xs) var(--space-l);
+		border: var(--border-width) solid transparent;
+		border-radius: var(--radius);
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background var(--transition),
+			border-color var(--transition);
+
+		&:focus-visible {
+			outline: var(--focus-ring);
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+}
+
+@layer components {
+	.field {
+		display: grid;
+		gap: var(--space-2xs);
+
+		& .field__hint {
+			font-size: var(--size-step--1);
+			color: var(--color-text-muted);
+		}
+
+		& .field__error {
+			font-size: var(--size-step--1);
+			color: var(--color-danger);
+		}
+	}
+
+	.button--primary {
+		background: var(--color-accent);
+		color: var(--color-on-accent);
+
+		&:hover:not(:disabled) {
+			background: color-mix(in oklab, var(--color-accent) 85%, var(--color-text));
+		}
+	}
+
+	.button--secondary {
+		background: transparent;
+		border-color: var(--color-border);
+		color: var(--color-text);
+
+		&:hover:not(:disabled) {
+			background: var(--color-surface-raised);
+		}
+	}
+
+	.button--danger {
+		background: var(--color-danger);
+		color: var(--color-on-accent);
+	}
+
+	.button--link {
+		min-block-size: auto;
+		padding: 0;
+		background: none;
+		color: var(--color-accent);
+		font-weight: inherit;
+		text-decoration: underline;
+		text-underline-offset: 0.15em;
+	}
+
+	.login-form {
+		inline-size: min(100%, 24rem);
+	}
+}

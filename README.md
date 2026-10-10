@@ -1,54 +1,35 @@
-# sv
+# Social Sanity
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Self-hosted, single-user app to **publish** to LinkedIn and Instagram (reformatted per platform) and to
+**filter** what you see on those platforms via a Firefox extension that hides unwanted posts.
 
-## Creating a project
+Built with SvelteKit (Svelte 5, TypeScript) on Node via `@sveltejs/adapter-node`, SQLite via Drizzle.
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+## Setup
 
 ```sh
-# recreate this project
-npx sv@1.1.1 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" sveltekit-adapter="adapter:node" --install npm .
-```
-
-## Adding features
-
-Add features to your project with `sv add`:
-
-```sh
-npx sv add
-```
-
-For example, to add Tailwind CSS:
-
-```sh
-npx sv add tailwindcss
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+npm install
+cp .env.example .env
+npm run hash-password -- 'your password'   # paste into APP_PASSWORD_HASH
+openssl rand -base64 48                    # SESSION_SECRET
+openssl rand -base64 32                    # TOKEN_ENC_KEY
+npm run db:push                            # create/update the SQLite schema (needs DATABASE_URL in env)
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+## Scripts
 
-To create a production version of your app:
+| Command                           | Purpose                                   |
+| --------------------------------- | ----------------------------------------- |
+| `npm run dev`                     | Dev server                                |
+| `npm run build` / `node build`    | Production build / run                    |
+| `npm run check`                   | Type-check                                |
+| `npm run lint` / `npm run format` | Prettier + ESLint                         |
+| `npm test`                        | Unit (node) and component (browser) tests |
+| `npm run db:push` / `db:studio`   | Drizzle schema push / browser             |
 
-```sh
-npm run build
-```
+## Layout
 
-You can preview the production build with `npm run preview`.
+- `src/lib/components/` — every UI control is a component
+- `src/lib/styles/` — global stylesheets and design tokens (no per-component styles)
+- `src/lib/server/` — server-only code (db, auth, crypto)
