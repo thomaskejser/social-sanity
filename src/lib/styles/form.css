@@ -124,6 +124,15 @@
 		text-underline-offset: 0.15em;
 	}
 
+	.ftp-form {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+		align-items: start;
+
+		& .integration-card__actions {
+			grid-column: 1 / -1;
+		}
+	}
+
 	.login-form {
 		inline-size: min(100%, 24rem);
 	}

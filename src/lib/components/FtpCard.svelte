@@ -1,0 +1,156 @@
+<script lang="ts" module>
+	export type FtpView = {
+		host: string;
+		port: number;
+		username: string;
+		passwordEnvVar: string;
+		encryption: 'explicit' | 'implicit' | 'none';
+		remoteDir: string;
+		publicUrl: string | null;
+		passwordSet: boolean;
+		lastTestedAt: number | null;
+		lastTestOk: boolean | null;
+		lastTestMessage: string | null;
+	};
+
+	export type FtpFormState = {
+		values: Record<string, string>;
+		errors: Record<string, string | undefined>;
+	};
+</script>
+
+<script lang="ts">
+	import { ftpStatus } from '#lib/integrations/ftp-status.ts';
+	import Alert from './Alert.svelte';
+	import Badge from './Badge.svelte';
+	import Button from './Button.svelte';
+	import DateTime from './DateTime.svelte';
+	import Form from './Form.svelte';
+	import SelectField from './SelectField.svelte';
+	import TextField from './TextField.svelte';
+
+	let { server, form }: { server: FtpView | null; form: FtpFormState | null } = $props();
+
+	const ENCRYPTION_OPTIONS = [
+		{ value: 'explicit', label: 'FTPS — explicit TLS (recommended)' },
+		{ value: 'implicit', label: 'FTPS — implicit TLS (usually port 990)' },
+		{ value: 'none', label: 'None — plain FTP (unencrypted)' }
+	];
+
+	const status = $derived(ftpStatus(server));
+	// After a failed save, show what the user typed; otherwise show the saved settings.
+	const values = $derived(
+		form?.values ?? {
+			host: server?.host ?? '',
+			port: server ? String(server.port) : '',
+			username: server?.username ?? '',
+			passwordEnvVar: server?.passwordEnvVar ?? 'FTP_PASSWORD',
+			encryption: server?.encryption ?? 'explicit',
+			remoteDir: server?.remoteDir ?? '/',
+			publicUrl: server?.publicUrl ?? ''
+		}
+	);
+	const errors = $derived(form?.errors ?? {});
+</script>
+
+<article class="integration-card integration-card--wide" aria-labelledby="integration-ftp">
+	<header class="integration-card__header">
+		<h2 id="integration-ftp">FTP file upload</h2>
+		<Badge tone={status.tone}>{status.label}</Badge>
+	</header>
+
+	<p class="integration-card__note">
+		Upload media to your own server, e.g. so Instagram can fetch images from a public URL. The
+		password is never stored: set it in an environment variable and enter the variable's name here.
+	</p>
+
+	{#if server && !server.passwordSet}
+		<Alert kind="warning">
+			<code>{server.passwordEnvVar}</code> is not set. Add it to <code>.env</code> (or the server environment)
+			and restart the app.
+		</Alert>
+	{/if}
+	{#if values.encryption === 'none'}
+		<Alert kind="warning">Plain FTP sends your password and files unencrypted.</Alert>
+	{/if}
+	{#if server?.lastTestedAt}
+		<p class="integration-card__test-result">
+			Last test (<DateTime epochMs={server.lastTestedAt} />): {server.lastTestMessage}
+		</p>
+	{/if}
+
+	<Form action="?/saveFtp" label="FTP server settings" variant="ftp" resetOnSuccess={false}>
+		<TextField
+			label="Host name or IP address"
+			name="host"
+			value={values.host}
+			placeholder="ftp.example.com"
+			required
+			error={errors.host}
+		/>
+		<TextField
+			label="Port"
+			name="port"
+			type="number"
+			value={values.port}
+			placeholder="21"
+			hint="Leave empty for the default."
+			error={errors.port}
+		/>
+		<TextField
+			label="Username"
+			name="username"
+			value={values.username}
+			autocomplete="off"
+			required
+			error={errors.username}
+		/>
+		<TextField
+			label="Password environment variable"
+			name="passwordEnvVar"
+			value={values.passwordEnvVar}
+			placeholder="FTP_PASSWORD"
+			required
+			hint="Name of the variable holding the password, e.g. FTP_PASSWORD."
+			error={errors.passwordEnvVar}
+		/>
+		<SelectField
+			label="Encryption"
+			name="encryption"
+			options={ENCRYPTION_OPTIONS}
+			value={values.encryption}
+			error={errors.encryption}
+		/>
+		<TextField
+			label="Remote directory"
+			name="remoteDir"
+			value={values.remoteDir}
+			placeholder="/"
+			hint="Created if it doesn't exist."
+			error={errors.remoteDir}
+		/>
+		<TextField
+			label="Public URL of that directory (optional)"
+			name="publicUrl"
+			type="url"
+			value={values.publicUrl}
+			placeholder="https://media.example.com/uploads"
+			hint="Where uploaded files can be reached over HTTP(S). Required for Instagram media."
+			error={errors.publicUrl}
+		/>
+		<div class="integration-card__actions">
+			<Button type="submit">Save</Button>
+			{#if server}
+				<Button
+					type="submit"
+					variant="secondary"
+					formaction="?/testFtp"
+					disabled={!server.passwordSet}
+				>
+					Test connection
+				</Button>
+				<Button type="submit" variant="danger" formaction="?/removeFtp">Remove</Button>
+			{/if}
+		</div>
+	</Form>
+</article>

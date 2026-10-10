@@ -50,6 +50,7 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"basic-ftp": "6.2.1",
 		"better-sqlite3": "^13.0.3",
 		"croner": "^10.0.1"
 	}

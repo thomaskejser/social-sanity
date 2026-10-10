@@ -31,6 +31,14 @@ page and Social Sanity stores only an encrypted access token. Each platform need
   redirect URI (must be HTTPS — set `PUBLIC_BASE_URL` to a tunnel or real host), and set
   `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET`. Tokens are refreshed automatically.
 
+### FTP upload
+
+The Integrations page can also hold an FTP server for uploading files (e.g. media that Instagram
+must fetch from a public URL). Enter host, port, username, encryption (FTPS recommended), remote
+directory and optionally the public URL of that directory. The password is **never stored**: put
+it in an environment variable and enter that variable's name (e.g. `FTP_PASSWORD`). "Test
+connection" logs in and writes/deletes a probe file.
+
 ## Scripts
 
 | Command                           | Purpose                                   |

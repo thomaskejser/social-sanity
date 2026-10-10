@@ -114,6 +114,14 @@
 			overflow-wrap: anywhere;
 		}
 
+		&.integration-card--wide {
+			grid-column: 1 / -1;
+		}
+
+		& .integration-card__test-result {
+			font-size: var(--size-step--1);
+		}
+
 		& .integration-card__actions {
 			display: flex;
 			flex-wrap: wrap;

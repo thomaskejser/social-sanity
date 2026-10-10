@@ -3,6 +3,7 @@
 	import IntegrationCard from '#lib/components/IntegrationCard.svelte';
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import CardGrid from '#lib/components/CardGrid.svelte';
+	import FtpCard from '#lib/components/FtpCard.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -31,9 +32,19 @@
 {#if form && 'error' in form}
 	<Alert kind="error">{form.error}</Alert>
 {/if}
+{#if form && 'ftpSaved' in form}
+	<Alert kind="success">FTP settings saved. Use "Test connection" to check them.</Alert>
+{/if}
+{#if form && 'ftpRemoved' in form}
+	<Alert kind="success">FTP server removed.</Alert>
+{/if}
+{#if form && 'ftpTest' in form && form.ftpTest}
+	<Alert kind={form.ftpTest.ok ? 'success' : 'error'}>FTP: {form.ftpTest.message}</Alert>
+{/if}
 
 <CardGrid>
 	{#each data.integrations as integration (integration.id)}
 		<IntegrationCard {integration} />
 	{/each}
+	<FtpCard server={data.ftp} form={form && 'ftp' in form ? (form.ftp ?? null) : null} />
 </CardGrid>

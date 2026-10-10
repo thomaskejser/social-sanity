@@ -21,3 +21,22 @@ export const accounts = sqliteTable('accounts', {
 });
 
 export type Account = typeof accounts.$inferSelect;
+
+/** The FTP server files are uploaded to (single row, id = 1). The password is never stored — only
+ * the name of the environment variable that holds it. */
+export const ftpServer = sqliteTable('ftp_server', {
+	id: integer('id').primaryKey(),
+	host: text('host').notNull(),
+	port: integer('port').notNull(),
+	username: text('username').notNull(),
+	passwordEnvVar: text('password_env_var').notNull(),
+	encryption: text('encryption', { enum: ['explicit', 'implicit', 'none'] }).notNull(),
+	remoteDir: text('remote_dir').notNull(),
+	publicUrl: text('public_url'),
+	lastTestedAt: integer('last_tested_at'),
+	lastTestOk: integer('last_test_ok', { mode: 'boolean' }),
+	lastTestMessage: text('last_test_message'),
+	updatedAt: integer('updated_at').notNull()
+});
+
+export type FtpServer = typeof ftpServer.$inferSelect;
