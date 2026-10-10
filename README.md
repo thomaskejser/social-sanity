@@ -52,6 +52,13 @@ connection" logs in and writes/deletes a probe file.
 | `npm test`                        | Unit (node) and component (browser) tests |
 | `npm run db:push` / `db:studio`   | Drizzle schema push / browser             |
 
+## Running in production
+
+`npm run build && node build`. Note that `@sveltejs/adapter-node` 6 assumes the public origin is
+**HTTPS** and no longer reads an `ORIGIN` variable. Run it behind a TLS-terminating reverse proxy and
+set `PROTOCOL_HEADER=x-forwarded-proto` (and `HOST_HEADER=x-forwarded-host` if the proxy rewrites the
+host). Plain-HTTP access without those headers makes form posts fail with 403 (CSRF check).
+
 ## Layout
 
 - `src/lib/components/` — every UI control is a component
