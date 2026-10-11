@@ -54,10 +54,11 @@ connection" logs in and writes/deletes a probe file.
 
 ## Running in production
 
-`npm run build && node build`. Note that `@sveltejs/adapter-node` 6 assumes the public origin is
-**HTTPS** and no longer reads an `ORIGIN` variable. Run it behind a TLS-terminating reverse proxy and
-set `PROTOCOL_HEADER=x-forwarded-proto` (and `HOST_HEADER=x-forwarded-host` if the proxy rewrites the
-host). Plain-HTTP access without those headers makes form posts fail with 403 (CSRF check).
+- Build and start with `npm run build && node build`.
+- `@sveltejs/adapter-node` 6 assumes the public origin is **HTTPS** and does not read an `ORIGIN` variable.
+- Run it behind a TLS-terminating reverse proxy and set `PROTOCOL_HEADER=x-forwarded-proto`.
+  Also set `HOST_HEADER=x-forwarded-host` if the proxy rewrites the host.
+- Plain-HTTP access without those headers makes form posts fail with 403 (CSRF check).
 
 ## Layout
 
