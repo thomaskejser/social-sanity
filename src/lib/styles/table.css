@@ -1,4 +1,10 @@
 @layer base {
+	.data-table {
+		max-inline-size: 100%;
+		overflow-inline: auto;
+		overflow-x: auto;
+	}
+
 	table {
 		inline-size: 100%;
 		border-collapse: collapse;
@@ -8,30 +14,24 @@
 	caption {
 		padding-block-end: var(--space-xs);
 		text-align: start;
-		font-weight: 600;
+		font-weight: var(--weight-bold);
 	}
 
 	th,
 	td {
-		padding: var(--space-xs) var(--space-s);
-		border-block-end: var(--border-width) solid var(--color-border);
+		padding: var(--space-xs) var(--space-sm);
+		border-block-end: var(--border-width) solid var(--border);
 		text-align: start;
 		vertical-align: top;
 	}
 
 	th {
-		font-size: var(--size-step--1);
-		color: var(--color-text-muted);
-		font-weight: 600;
+		font-size: var(--size-sm);
+		font-weight: var(--weight-bold);
+		color: var(--text-muted);
 	}
 
 	tbody tr:nth-child(even) {
-		background: var(--color-surface-raised);
-	}
-}
-
-@layer components {
-	.data-table {
-		overflow-x: auto;
+		background-color: var(--surface-raised);
 	}
 }

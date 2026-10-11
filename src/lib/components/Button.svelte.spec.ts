@@ -7,10 +7,10 @@ import Button from './Button.svelte';
 const label = (text: string) => createRawSnippet(() => ({ render: () => `<span>${text}</span>` }));
 
 describe('Button', () => {
-	it('renders a semantic button with its variant class', async () => {
-		render(Button, { variant: 'danger', children: label('Delete') });
+	it('renders a semantic button with its data-action', async () => {
+		render(Button, { action: 'destructive', children: label('Delete') });
 		const button = page.getByRole('button', { name: 'Delete' });
-		await expect.element(button).toHaveClass('button--danger');
+		await expect.element(button).toHaveAttribute('data-action', 'destructive');
 		await expect.element(button).toHaveAttribute('type', 'button');
 	});
 

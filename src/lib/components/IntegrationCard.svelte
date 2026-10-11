@@ -35,14 +35,14 @@
 	);
 </script>
 
-<article class="integration-card" aria-labelledby="integration-{integration.id}">
-	<header class="integration-card__header">
+<article class="card" aria-labelledby="integration-{integration.id}">
+	<header>
 		<h2 id="integration-{integration.id}">{integration.name}</h2>
 		<Badge tone={status.tone}>{status.label}</Badge>
 	</header>
 
 	{#if integration.account}
-		<dl class="integration-card__details">
+		<dl>
 			<dt>Account</dt>
 			<dd>{integration.account.displayName}</dd>
 			<dt>Connected</dt>
@@ -60,16 +60,16 @@
 	{/if}
 
 	{#if integration.note}
-		<p class="integration-card__note">{integration.note}</p>
+		<p class="card-note">{integration.note}</p>
 	{/if}
 
 	{#if integration.configured || integration.account}
-		<div class="integration-card__actions">
+		<footer>
 			{#if integration.configured}
 				<LinkButton
 					href={connectHref}
 					reload
-					variant={integration.account ? 'secondary' : 'primary'}
+					action={integration.account ? 'secondary' : 'primary'}
 				>
 					{integration.account ? 'Reconnect' : 'Connect'}
 				</LinkButton>
@@ -77,27 +77,25 @@
 			{#if integration.account}
 				<Form action="?/disconnect" label="Disconnect {integration.name}">
 					<input type="hidden" name="platform" value={integration.id} />
-					<Button type="submit" variant="danger">Disconnect</Button>
+					<Button type="submit" action="destructive">Disconnect</Button>
 				</Form>
 			{/if}
-		</div>
+		</footer>
 	{/if}
 
 	{#if !integration.configured}
-		<div class="integration-card__setup">
-			<p>
-				To enable {integration.name}, create an app in the
-				<ExternalLink href={integration.consoleUrl}>developer console</ExternalLink>, set
-				{#each integration.requiredEnv as name, i (name)}<code>{name}</code>{i <
-					integration.requiredEnv.length - 1
-						? ' and '
-						: ''}{/each}
-				in <code>.env</code>, and restart the app.
-			</p>
-		</div>
+		<p>
+			To enable {integration.name}, create an app in the
+			<ExternalLink href={integration.consoleUrl}>developer console</ExternalLink>, set
+			{#each integration.requiredEnv as name, i (name)}<code>{name}</code>{i <
+				integration.requiredEnv.length - 1
+					? ' and '
+					: ''}{/each}
+			in <code>.env</code>, and restart the app.
+		</p>
 	{/if}
 
-	<p class="integration-card__redirect">
+	<p class="card-note">
 		Redirect URI to register: <code>{integration.redirectUri}</code>
 	</p>
 </article>

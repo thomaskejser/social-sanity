@@ -7,6 +7,6 @@ export function ftpStatus(
 	if (!server.passwordSet) return { tone: 'danger', label: 'Password variable not set' };
 	if (server.lastTestOk === null) return { tone: 'neutral', label: 'Not tested' };
 	return server.lastTestOk
-		? { tone: 'success', label: 'Connected' }
+		? { tone: 'ok', label: 'Connected' }
 		: { tone: 'danger', label: 'Connection failed' };
 }

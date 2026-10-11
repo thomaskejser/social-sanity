@@ -1,18 +1,19 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { Tone } from '#lib/tone.ts';
 
-	const LABELS = { info: 'Note:', success: 'Done:', warning: 'Warning:', error: 'Error:' };
+	const LABELS: Record<Tone, string> = {
+		info: 'Note:',
+		neutral: 'Note:',
+		ok: 'Done:',
+		warn: 'Warning:',
+		danger: 'Error:'
+	};
 
-	let {
-		kind = 'info',
-		children
-	}: {
-		kind?: 'info' | 'success' | 'warning' | 'error';
-		children: Snippet;
-	} = $props();
+	let { tone = 'info', children }: { tone?: Tone; children: Snippet } = $props();
 </script>
 
-<div class="alert alert--{kind}" role={kind === 'error' ? 'alert' : 'status'}>
-	<span class="alert__label">{LABELS[kind]}</span>
+<div role={tone === 'danger' ? 'alert' : 'status'} data-tone={tone}>
+	<strong>{LABELS[tone]}</strong>
 	<div>{@render children()}</div>
 </div>

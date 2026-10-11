@@ -13,4 +13,4 @@
 	} = $props();
 </script>
 
-<a class="nav-link" {href} aria-current={current ? 'page' : undefined}>{@render children()}</a>
+<a {href} aria-current={current ? 'page' : undefined}>{@render children()}</a>

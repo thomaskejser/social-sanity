@@ -32,8 +32,8 @@
 		{/each}
 	</select>
 	{#if error}
-		<p class="field__error" id="{id}-desc">{error}</p>
+		<p class="field-error" id="{id}-desc">{error}</p>
 	{:else if hint}
-		<p class="field__hint" id="{id}-desc">{hint}</p>
+		<p class="field-hint" id="{id}-desc">{hint}</p>
 	{/if}
 </div>

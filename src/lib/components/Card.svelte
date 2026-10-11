@@ -13,9 +13,9 @@
 </script>
 
 <section class="card">
-	<h2 class="card__title">{title}</h2>
+	<header><h2>{title}</h2></header>
 	{@render children()}
 	{#if actions}
-		<div class="card__actions">{@render actions()}</div>
+		<footer>{@render actions()}</footer>
 	{/if}
 </section>

@@ -1,5 +1,7 @@
+import type { Tone } from '../tone.ts';
+
 export type IntegrationStatus = {
-	tone: 'neutral' | 'success' | 'warning' | 'danger';
+	tone: Tone;
 	label: string;
 };
 
@@ -13,14 +15,14 @@ export function integrationStatus(
 ): IntegrationStatus {
 	if (!configured) return { tone: 'neutral', label: 'Not configured' };
 	if (!account) return { tone: 'neutral', label: 'Not connected' };
-	if (account.expiresAt === null) return { tone: 'success', label: 'Connected' };
+	if (account.expiresAt === null) return { tone: 'ok', label: 'Connected' };
 
 	const msLeft = account.expiresAt - now;
 	if (msLeft <= 0) return { tone: 'danger', label: 'Expired — reconnect' };
 
 	const daysLeft = Math.ceil(msLeft / DAY_MS);
 	if (daysLeft <= EXPIRY_WARNING_DAYS) {
-		return { tone: 'warning', label: `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` };
+		return { tone: 'warn', label: `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}` };
 	}
-	return { tone: 'success', label: 'Connected' };
+	return { tone: 'ok', label: 'Connected' };
 }

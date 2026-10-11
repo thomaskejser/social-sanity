@@ -30,18 +30,18 @@
 	}
 </script>
 
-<header class="site-header">
-	<nav class="site-nav" aria-label="Main">
-		<a class="site-nav__brand" href={resolve('/')}>Social Sanity</a>
-		{#if showLogout}
-			<ul class="site-nav__links">
+<header>
+	<p><a href={resolve('/')}>Social Sanity</a></p>
+	{#if showLogout}
+		<nav aria-label="Main">
+			<ul>
 				{#each items as item (item.href)}
 					<li><NavLink href={item.href} current={isCurrent(item.match)}>{item.label}</NavLink></li>
 				{/each}
 			</ul>
-			<Form action="/logout" label="Log out">
-				<Button type="submit" variant="secondary">Log out</Button>
-			</Form>
-		{/if}
-	</nav>
+		</nav>
+		<Form action="/logout" label="Log out">
+			<Button type="submit" action="secondary">Log out</Button>
+		</Form>
+	{/if}
 </header>

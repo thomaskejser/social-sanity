@@ -4,12 +4,12 @@
 
 	let {
 		href,
-		variant = 'primary',
+		action = 'primary',
 		reload = false,
 		children
 	}: {
 		href: ResolvedPathname;
-		variant?: 'primary' | 'secondary';
+		action?: 'primary' | 'secondary';
 		/** Bypass client-side routing, e.g. for server endpoints that redirect off-site. */
 		reload?: boolean;
 		children: Snippet;
@@ -17,7 +17,7 @@
 </script>
 
 <a
-	class="button button--{variant}"
+	data-action={action}
 	{href}
 	data-sveltekit-reload={reload ? '' : undefined}
 	data-sveltekit-preload-data={reload ? 'off' : undefined}>{@render children()}</a

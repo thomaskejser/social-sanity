@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		variant = 'primary',
+		action = 'primary',
 		type = 'button',
 		disabled = false,
 		name,
@@ -11,7 +11,7 @@
 		onclick,
 		children
 	}: {
-		variant?: 'primary' | 'secondary' | 'danger' | 'link';
+		action?: 'primary' | 'secondary' | 'destructive' | 'inline';
 		type?: 'button' | 'submit' | 'reset';
 		disabled?: boolean;
 		name?: string;
@@ -22,6 +22,6 @@
 	} = $props();
 </script>
 
-<button class="button button--{variant}" {type} {disabled} {name} {value} {formaction} {onclick}>
+<button data-action={action} {type} {disabled} {name} {value} {formaction} {onclick}>
 	{@render children()}
 </button>

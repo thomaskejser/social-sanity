@@ -17,13 +17,13 @@ describe('integrationStatus', () => {
 	});
 
 	it('is connected when expiry is far away or unknown', () => {
-		expect(integrationStatus(true, { expiresAt: NOW + 40 * DAY }, NOW).tone).toBe('success');
-		expect(integrationStatus(true, { expiresAt: null }, NOW).tone).toBe('success');
+		expect(integrationStatus(true, { expiresAt: NOW + 40 * DAY }, NOW).tone).toBe('ok');
+		expect(integrationStatus(true, { expiresAt: null }, NOW).tone).toBe('ok');
 	});
 
 	it('warns within 7 days of expiry', () => {
 		expect(integrationStatus(true, { expiresAt: NOW + 3 * DAY }, NOW)).toEqual({
-			tone: 'warning',
+			tone: 'warn',
 			label: 'Expires in 3 days'
 		});
 		expect(integrationStatus(true, { expiresAt: NOW + 1000 }, NOW).label).toBe('Expires in 1 day');

@@ -6,4 +6,4 @@
 
 <PageHeader title="Something went wrong" />
 
-<Alert kind="error">{page.status}: {page.error?.message}</Alert>
+<Alert tone="danger">{page.status}: {page.error?.message}</Alert>

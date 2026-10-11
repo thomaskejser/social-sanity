@@ -4,9 +4,9 @@
 	let { title, lede }: { title: string; lede?: Snippet } = $props();
 </script>
 
-<header class="page-header">
+<header>
 	<h1>{title}</h1>
 	{#if lede}
-		<p class="page-header__lede">{@render lede()}</p>
+		<p>{@render lede()}</p>
 	{/if}
 </header>

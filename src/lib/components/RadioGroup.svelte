@@ -18,11 +18,11 @@
 	const id = $props.id();
 </script>
 
-<fieldset class="radio-group" aria-describedby={error || hint ? `${id}-desc` : undefined}>
+<fieldset aria-describedby={error || hint ? `${id}-desc` : undefined}>
 	<legend>{legend}</legend>
-	<div class="radio-group__options">
+	<div class="choices">
 		{#each options as option (option.value)}
-			<div class="radio-group__option">
+			<div class="choice">
 				<input
 					type="radio"
 					id="{id}-{option.value}"
@@ -31,18 +31,16 @@
 					bind:group={value}
 					aria-describedby={option.description ? `${id}-${option.value}-desc` : undefined}
 				/>
-				<label class="radio-group__label" for="{id}-{option.value}">{option.label}</label>
+				<label for="{id}-{option.value}">{option.label}</label>
 				{#if option.description}
-					<span class="radio-group__description" id="{id}-{option.value}-desc"
-						>{option.description}</span
-					>
+					<span class="choice-description" id="{id}-{option.value}-desc">{option.description}</span>
 				{/if}
 			</div>
 		{/each}
 	</div>
 	{#if error}
-		<p class="field__error" id="{id}-desc">{error}</p>
+		<p class="field-error" id="{id}-desc">{error}</p>
 	{:else if hint}
-		<p class="field__hint" id="{id}-desc">{hint}</p>
+		<p class="field-hint" id="{id}-desc">{hint}</p>
 	{/if}
 </fieldset>

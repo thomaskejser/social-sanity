@@ -21,6 +21,6 @@
 
 <SiteHeader items={navItems} currentPath={page.url.pathname} showLogout={data.authenticated} />
 
-<main class="site-main">
+<main>
 	{@render children()}
 </main>

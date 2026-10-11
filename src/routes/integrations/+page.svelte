@@ -21,25 +21,25 @@
 </PageHeader>
 
 {#if data.connected}
-	<Alert kind="success">{data.connected} connected.</Alert>
+	<Alert tone="ok">{data.connected} connected.</Alert>
 {/if}
 {#if form && 'disconnected' in form}
-	<Alert kind="success">{form.disconnected} disconnected.</Alert>
+	<Alert tone="ok">{form.disconnected} disconnected.</Alert>
 {/if}
 {#if data.error}
-	<Alert kind="error">{data.error}</Alert>
+	<Alert tone="danger">{data.error}</Alert>
 {/if}
 {#if form && 'error' in form}
-	<Alert kind="error">{form.error}</Alert>
+	<Alert tone="danger">{form.error}</Alert>
 {/if}
 {#if form && 'ftpSaved' in form}
-	<Alert kind="success">FTP settings saved. Use "Test connection" to check them.</Alert>
+	<Alert tone="ok">FTP settings saved. Use "Test connection" to check them.</Alert>
 {/if}
 {#if form && 'ftpRemoved' in form}
-	<Alert kind="success">FTP server removed.</Alert>
+	<Alert tone="ok">FTP server removed.</Alert>
 {/if}
 {#if form && 'ftpTest' in form && form.ftpTest}
-	<Alert kind={form.ftpTest.ok ? 'success' : 'error'}>FTP: {form.ftpTest.message}</Alert>
+	<Alert tone={form.ftpTest.ok ? 'ok' : 'danger'}>FTP: {form.ftpTest.message}</Alert>
 {/if}
 
 <CardGrid>

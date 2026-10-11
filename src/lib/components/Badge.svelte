@@ -1,13 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { Tone } from '#lib/tone.ts';
 
-	let {
-		tone = 'neutral',
-		children
-	}: {
-		tone?: 'neutral' | 'success' | 'warning' | 'danger';
-		children: Snippet;
-	} = $props();
+	let { tone = 'neutral', children }: { tone?: Tone; children: Snippet } = $props();
 </script>
 
-<span class="badge badge--{tone}">{@render children()}</span>
+<span class="badge" data-tone={tone}>{@render children()}</span>

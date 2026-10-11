@@ -65,38 +65,38 @@
 	const isSftp = $derived(protocol === 'sftp');
 </script>
 
-<article class="integration-card integration-card--wide" aria-labelledby="integration-ftp">
-	<header class="integration-card__header">
+<article class="card" aria-labelledby="integration-ftp">
+	<header>
 		<h2 id="integration-ftp">File upload (FTP / SFTP)</h2>
 		<Badge tone={status.tone}>{status.label}</Badge>
 	</header>
 
-	<p class="integration-card__note">
+	<p class="card-note">
 		Upload media to your own server, e.g. so Instagram can fetch images from a public URL. The
 		password is never stored: set it in an environment variable and enter the variable's name here.
 	</p>
 
 	{#if server && !server.passwordSet}
-		<Alert kind="warning">
+		<Alert tone="warn">
 			<code>{server.passwordEnvVar}</code> is not set. Add it to <code>.env</code> (or the server environment)
 			and restart the app.
 		</Alert>
 	{/if}
 	{#if !isSftp && values.encryption === 'none'}
-		<Alert kind="warning">Plain FTP sends your password and files unencrypted.</Alert>
+		<Alert tone="warn">Plain FTP sends your password and files unencrypted.</Alert>
 	{/if}
 	{#if server?.protocol === 'sftp' && server.hostKeyFingerprint}
-		<p class="integration-card__test-result">
+		<p class="card-note">
 			Pinned host key: <code>{server.hostKeyFingerprint}</code>
 		</p>
 	{/if}
 	{#if server?.lastTestedAt}
-		<p class="integration-card__test-result">
+		<p class="card-note">
 			Last test (<DateTime epochMs={server.lastTestedAt} />): {server.lastTestMessage}
 		</p>
 	{/if}
 
-	<Form action="?/saveFtp" label="File server settings" variant="ftp" resetOnSuccess={false}>
+	<Form action="?/saveFtp" label="File server settings" variant="settings" resetOnSuccess={false}>
 		<RadioGroup
 			legend="Protocol"
 			name="protocol"
@@ -164,19 +164,19 @@
 			hint="Where uploaded files can be reached over HTTP(S). Required for Instagram media."
 			error={errors.publicUrl}
 		/>
-		<div class="integration-card__actions">
+		<footer>
 			<Button type="submit">Save</Button>
 			{#if server}
 				<Button
 					type="submit"
-					variant="secondary"
+					action="secondary"
 					formaction="?/testFtp"
 					disabled={!server.passwordSet}
 				>
 					Test connection
 				</Button>
-				<Button type="submit" variant="danger" formaction="?/removeFtp">Remove</Button>
+				<Button type="submit" action="destructive" formaction="?/removeFtp">Remove</Button>
 			{/if}
-		</div>
+		</footer>
 	</Form>
 </article>

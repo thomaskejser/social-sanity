@@ -8,7 +8,7 @@ describe('ftpStatus', () => {
 			'Password variable not set'
 		);
 		expect(ftpStatus({ passwordSet: true, lastTestOk: null }).label).toBe('Not tested');
-		expect(ftpStatus({ passwordSet: true, lastTestOk: true }).tone).toBe('success');
+		expect(ftpStatus({ passwordSet: true, lastTestOk: true }).tone).toBe('ok');
 		expect(ftpStatus({ passwordSet: true, lastTestOk: false }).tone).toBe('danger');
 	});
 });
