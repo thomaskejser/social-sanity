@@ -69,8 +69,8 @@
 	{#if accountProblem && !locked}
 		<Alert tone="warn">{accountProblem} Connect it on the Integrations page to publish.</Alert>
 	{/if}
-	{#if status === 'failed' && error}
-		<Alert tone="danger">{error}</Alert>
+	{#if error}
+		<Alert tone={status === 'failed' ? 'danger' : 'warn'}>{error}</Alert>
 	{/if}
 	{#if remoteUrl}
 		<p><ExternalLink href={remoteUrl}>View the post on {platform.name}</ExternalLink></p>

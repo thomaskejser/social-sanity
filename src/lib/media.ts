@@ -12,11 +12,19 @@ export const MEDIA_ACCEPT = Object.keys(MEDIA_TYPES).join(',');
 export const MAX_MEDIA_BYTES = 300 * 1024 * 1024;
 export const MAX_MEDIA_FILES = 20;
 
-const FILE_NAME =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|gif|mp4|mov)$/;
+const MIME_BY_EXTENSION: Record<string, string> = {
+	jpg: 'image/jpeg',
+	jpeg: 'image/jpeg',
+	png: 'image/png',
+	gif: 'image/gif',
+	mp4: 'video/mp4',
+	mov: 'video/quicktime'
+};
 
-export function isMediaFileName(name: string): boolean {
-	return FILE_NAME.test(name);
+/** The media type of a file in the repository, by extension, or undefined when unsupported. */
+export function mediaTypeForFile(name: string): { kind: MediaKind; mimeType: string } | undefined {
+	const mimeType = MIME_BY_EXTENSION[name.split('.').pop()?.toLowerCase() ?? ''];
+	return mimeType ? { kind: MEDIA_TYPES[mimeType].kind, mimeType } : undefined;
 }
 
 /** Why an uploaded file can't be used, or undefined when it can. */
@@ -35,6 +43,7 @@ export function uploadProblem(file: {
 	return undefined;
 }
 
-export function mediaUrl(fileName: string): `/media/${string}` {
-	return `/media/${fileName}`;
+/** URL path of a media file, given its path inside the posts folder. */
+export function mediaUrl(postsPath: string): `/media/${string}` {
+	return `/media/${postsPath.split('/').map(encodeURIComponent).join('/')}`;
 }

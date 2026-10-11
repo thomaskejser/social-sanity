@@ -41,21 +41,64 @@ changes the connection is refused until you save the settings again. The passwor
 it in an environment variable and enter that variable's name (e.g. `FTP_PASSWORD`). "Test
 connection" logs in and writes/deletes a probe file.
 
+## Posts repository
+
+- Posts live as Markdown files in a git repository, added under **Integrations → Posts repository**.
+- The app keeps its own clone (`REPO_DIR`, default `data/repo`).
+  - It pulls every 5 minutes, and on "Pull now" on the Posts page.
+  - Every change it makes is committed with the configured author and pushed straight away.
+  - A push that fails stays committed locally and goes out with the next pull.
+- Access:
+  - SSH URLs (`git@host:org/repo.git`) use this machine's SSH keys; a new host key is accepted on first use.
+  - HTTPS URLs can use a token from an environment variable whose name you enter; the token is never stored.
+  - Only `https://`, `ssh://` and `git@host:path` URLs are accepted (plain `http://` only to this machine).
+
+### File layout
+
+- Each `.md` file under the posts folder is a post; `README.md` files are ignored.
+- Posts written in the app get a folder `YYYY-MM-DD-slug/` with `index.md` and the uploaded media.
+- The body is the post text, written in Markdown.
+  - Markdown is turned into plain text for the platforms: emphasis is removed, `[label](url)` becomes `label url`, and list items get bullets.
+  - HTML comments (`<!-- … -->`) are dropped, so they can hold private notes.
+  - Images and videos are referenced with `![alt](file.jpg)`, relative to the Markdown file and inside the posts folder.
+- Front matter holds the title, the date and per-platform state:
+
+  ```yaml
+  ---
+  title: Autumn launch
+  date: 2026-10-01
+  platforms:
+    instagram:
+      text: |-
+        Autumn collection is live! Link in bio.
+        #autumn
+    linkedin:
+      url: https://www.linkedin.com/feed/update/urn:li:share:123/
+      id: urn:li:share:123
+      publishedAt: 2026-10-11T14:02:00.000Z
+  ---
+  ```
+
+  - `text` replaces the text generated from the body for that platform.
+  - `url`, `id` and `publishedAt` are written when a post is published; a platform with an `id` is never published again.
+
 ## Posting
 
-- **Posts → New post** takes the text once, plus images or a video.
+- **Posts → New post** takes an optional title, the text and images or a video, and commits them as a new post.
 - The preview page shows a card per platform with that platform's version of the text and media.
   - LinkedIn keeps the text as written (normalized whitespace).
   - Instagram moves links to the end of the caption, because links in captions are not clickable.
   - Each card's text can be edited; the preview, character count and checks update as you type.
-  - "Reset text" restores the generated version.
+  - "Save changes" commits edited texts to the front matter; "Reset text" restores the generated version.
 - Publish to one platform from its card, or to every ready platform with "Publish to all".
   - Publishing runs in the background and the page refreshes until it finishes.
   - A platform is ready when it is connected and its checks show no errors.
+  - Successful publishes are committed to the front matter; failures are shown in the app only.
 - Instagram fetches media from a public URL.
   - With a file upload server that has a public URL, media is uploaded there first.
-  - Otherwise it is served from `<PUBLIC_BASE_URL>/media/...`, which must be reachable from the internet.
+  - Otherwise it gets a signed link to `<PUBLIC_BASE_URL>/media/...` that expires after an hour.
 - Instagram accepts only JPEG images; LinkedIn accepts JPEG, PNG and GIF, and MP4 video.
+- GitHub rejects files over 100 MB, so large videos may not push.
 
 ## Scripts
 

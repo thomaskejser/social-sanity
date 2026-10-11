@@ -1,26 +1,38 @@
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
+import path from 'node:path';
 import { Readable } from 'node:stream';
 import { error } from '@sveltejs/kit';
-import { isMediaFileName, MEDIA_TYPES } from '#lib/media.ts';
-import { mediaPath } from '#lib/server/media/store.ts';
+import { SESSION_SECRET } from '$app/env/private';
+import { mediaTypeForFile } from '#lib/media.ts';
+import { isValidMediaSignature } from '#lib/server/media/signing.ts';
+import { getGitRepo, postsRoot } from '#lib/server/repo/store.ts';
 import type { RequestHandler } from './$types';
 
-const MIME_BY_EXTENSION = Object.fromEntries(
-	Object.entries(MEDIA_TYPES).map(([mime, { extension }]) => [extension, mime])
-);
-
-/** Serves uploaded media, with byte ranges so browsers can seek in videos. */
-export const GET: RequestHandler = async ({ params, request }) => {
-	if (!isMediaFileName(params.file)) error(404, 'Not found');
-	const filePath = mediaPath(params.file);
+/** Serves media from the posts folder to a logged-in user, or to anyone holding a signed link.
+ * Supports byte ranges so browsers can seek in videos. */
+export const GET: RequestHandler = async ({ params, request, url, locals }) => {
+	const mediaPath = params.path;
+	if (
+		!locals.authenticated &&
+		!isValidMediaSignature(SESSION_SECRET, mediaPath, url.searchParams)
+	) {
+		error(404, 'Not found');
+	}
+	const repo = getGitRepo();
+	const type = mediaTypeForFile(mediaPath);
+	if (!repo || !type) error(404, 'Not found');
+	const root = postsRoot(repo);
+	const realRoot = await realpath(root).catch(() => root);
+	const filePath = await realpath(path.resolve(root, mediaPath)).catch(() => null);
+	if (!filePath?.startsWith(realRoot + path.sep)) error(404, 'Not found');
 	const info = await stat(filePath).catch(() => null);
 	if (!info?.isFile()) error(404, 'Not found');
 
 	const headers = new Headers({
-		'Content-Type': MIME_BY_EXTENSION[params.file.split('.').pop()!],
+		'Content-Type': type.mimeType,
 		'Accept-Ranges': 'bytes',
-		'Cache-Control': 'public, max-age=31536000, immutable'
+		'Cache-Control': 'private, max-age=300'
 	});
 
 	const range = /^bytes=(\d*)-(\d*)$/.exec(request.headers.get('range') ?? '');

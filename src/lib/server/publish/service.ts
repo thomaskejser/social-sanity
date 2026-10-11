@@ -1,17 +1,27 @@
-import { PUBLIC_BASE_URL } from '$app/env/private';
-import {
-	checkPost,
-	hasErrors,
-	platformFormat,
-	type DraftMedia,
-	type PlatformId
-} from '#lib/format/index.ts';
-import type { Account, PostMedia, PostTarget } from '../db/schema.ts';
+import { readFile } from 'node:fs/promises';
+import { PUBLIC_BASE_URL, SESSION_SECRET } from '$app/env/private';
+import { hasErrors, platformFormat, type DraftMedia, type PlatformId } from '#lib/format/index.ts';
+import { mediaUrl } from '#lib/media.ts';
+import type { Account, GitRepo, PublishAttempt } from '../db/schema.ts';
 import { getFtpServer } from '../ftp/store.ts';
 import { uploadToFileServer } from '../ftp/transfer.ts';
 import { getAccessToken, listAccounts } from '../integrations/accounts.ts';
-import { readMedia } from '../media/store.ts';
-import { claimTargets, getPost, markFailed, markPublished } from '../posts/store.ts';
+import { signMediaPath } from '../media/signing.ts';
+import {
+	clearAttempt,
+	failAttempt,
+	listAttempts,
+	listUnrecorded,
+	markUnrecorded,
+	startAttempt
+} from '../posts/attempts.ts';
+import {
+	getPost,
+	platformText,
+	recordPublished,
+	type PostMediaFile,
+	type RepoPost
+} from '../posts/repo-posts.ts';
 import { publishInstagram } from './instagram.ts';
 import { publishLinkedIn } from './linkedin.ts';
 import {
@@ -28,36 +38,41 @@ const PUBLISHERS: Record<PlatformId, (request: PublishRequest) => Promise<Publis
 
 export type Skipped = { platform: PlatformId; reason: string };
 
-export function draftMedia(media: PostMedia[]): DraftMedia[] {
+export function draftMedia(media: PostMediaFile[]): DraftMedia[] {
 	return media.map(({ kind, mimeType, originalName }) => ({ kind, mimeType, originalName }));
 }
 
-/** Why `target` can't be published right now, or undefined when it can. */
+/** Why the post can't be published to `platform` right now, or undefined when it can. */
 export function blockedReason(
-	target: PostTarget,
-	media: PostMedia[],
+	post: RepoPost,
+	platform: PlatformId,
+	attempt: PublishAttempt | undefined,
 	account: Account | undefined,
 	now = Date.now()
 ): string | undefined {
-	const name = platformFormat(target.platform as PlatformId).name;
-	if (target.status === 'published') return `Already published to ${name}.`;
-	if (target.status === 'publishing') return `Already publishing to ${name}.`;
-	if (!account) return `${name} is not connected. Connect it on the Integrations page.`;
+	const format = platformFormat(platform);
+	if (post.parsed.platforms[platform]?.published) return `Already published to ${format.name}.`;
+	if (attempt?.status === 'publishing') return `Already publishing to ${format.name}.`;
+	if (attempt?.status === 'unrecorded') return `Already published to ${format.name}.`;
+	if (!account) return `${format.name} is not connected. Connect it on the Integrations page.`;
 	if (account.expiresAt !== null && account.expiresAt <= now) {
-		return `The ${name} token has expired. Reconnect it on the Integrations page.`;
+		return `The ${format.name} token has expired. Reconnect it on the Integrations page.`;
 	}
-	const issues = checkPost(target.platform as PlatformId, target.text, draftMedia(media));
-	if (hasErrors(issues)) return `${name}: ${issues.find((i) => i.level === 'error')?.message}`;
+	if (post.problems.length > 0) return `${format.name}: ${post.problems[0]}`;
+	const issues = format.check(platformText(post, platform), draftMedia(post.media));
+	if (hasErrors(issues))
+		return `${format.name}: ${issues.find((i) => i.level === 'error')?.message}`;
 	return undefined;
 }
 
-async function publicMediaUrl(item: PostMedia): Promise<string> {
+async function publicMediaUrl(item: PostMediaFile): Promise<string> {
 	const server = getFtpServer();
 	if (server?.publicUrl) {
+		const remoteName = item.postsPath.replace(/[^A-Za-z0-9._-]+/g, '-');
 		const { publicUrl } = await uploadToFileServer(
 			server,
-			item.fileName,
-			await readMedia(item.fileName)
+			remoteName,
+			await readFile(item.absolutePath)
 		);
 		if (publicUrl) return publicUrl;
 	}
@@ -71,59 +86,98 @@ async function publicMediaUrl(item: PostMedia): Promise<string> {
 			`PUBLIC_BASE_URL is ${PUBLIC_BASE_URL}, which Instagram can't reach. Use a public address or the file upload integration.`
 		);
 	}
-	return `${PUBLIC_BASE_URL}/media/${item.fileName}`;
+	return `${PUBLIC_BASE_URL}${mediaUrl(item.postsPath)}?${signMediaPath(SESSION_SECRET, item.postsPath)}`;
 }
 
-function toPublishMedia(item: PostMedia): PublishMedia {
+function toPublishMedia(item: PostMediaFile): PublishMedia {
 	return {
 		kind: item.kind,
 		mimeType: item.mimeType,
 		size: item.size,
-		read: () => readMedia(item.fileName),
+		read: () => readFile(item.absolutePath),
 		publicUrl: () => publicMediaUrl(item)
 	};
 }
 
-async function run(postId: number, target: PostTarget, media: PostMedia[], account: Account) {
-	const platform = target.platform as PlatformId;
+async function record(
+	repo: GitRepo,
+	postId: string,
+	platform: PlatformId,
+	result: PublishResult,
+	publishedAt: number
+) {
 	try {
-		const result = await PUBLISHERS[platform]({
+		await recordPublished(repo, postId, platform, {
+			url: result.remoteUrl,
+			id: result.remoteId,
+			publishedAt: new Date(publishedAt).toISOString()
+		});
+		clearAttempt(postId, platform);
+	} catch (error) {
+		markUnrecorded(
+			postId,
+			platform,
+			{ ...result, publishedAt },
+			`Published, but saving that to the repository failed: ${error instanceof Error ? error.message : String(error)}. It is retried on the next pull.`
+		);
+	}
+}
+
+async function run(repo: GitRepo, post: RepoPost, platform: PlatformId, account: Account) {
+	let result: PublishResult;
+	try {
+		result = await PUBLISHERS[platform]({
 			accessToken: getAccessToken(account),
 			accountId: account.externalId,
-			text: target.text,
-			media: media.map(toPublishMedia)
+			text: platformText(post, platform),
+			media: post.media.map(toPublishMedia)
 		});
-		markPublished(postId, platform, result);
 	} catch (error) {
-		markFailed(postId, platform, error instanceof Error ? error.message : String(error));
+		failAttempt(post.id, platform, error instanceof Error ? error.message : String(error));
+		return;
 	}
+	await record(repo, post.id, platform, result, Date.now());
 }
 
 /** Starts publishing the post to each platform that is ready, in the background. Platforms
  * that are not ready are reported with the reason. */
-export function startPublishing(
-	postId: number,
+export async function startPublishing(
+	repo: GitRepo,
+	postId: string,
 	platforms: PlatformId[]
-): { started: PlatformId[]; skipped: Skipped[] } {
-	const post = getPost(postId);
+): Promise<{ started: PlatformId[]; skipped: Skipped[] }> {
+	const post = await getPost(repo, postId);
 	if (!post) throw new Error(`Post ${postId} not found`);
 	const accounts = listAccounts();
-	const ready: PlatformId[] = [];
+	const attempts = listAttempts(postId);
+	const started: PlatformId[] = [];
 	const skipped: Skipped[] = [];
 
 	for (const platform of platforms) {
-		const target = post.targets.find((t) => t.platform === platform);
-		if (!target) continue;
 		const account = accounts.find((a) => a.platform === platform);
-		const reason = blockedReason(target, post.media, account);
+		const attempt = attempts.find((a) => a.platform === platform);
+		const reason = blockedReason(post, platform, attempt, account);
 		if (reason) skipped.push({ platform, reason });
-		else ready.push(platform);
+		else if (!account || !startAttempt(postId, platform)) {
+			skipped.push({ platform, reason: `Already publishing to ${platformFormat(platform).name}.` });
+		} else {
+			started.push(platform);
+			void run(repo, post, platform, account);
+		}
 	}
+	return { started, skipped };
+}
 
-	const claimed = ready.length > 0 ? claimTargets(postId, ready) : [];
-	for (const target of claimed) {
-		const account = accounts.find((a) => a.platform === target.platform);
-		if (account) void run(postId, target, post.media, account);
+/** Writes publishes that succeeded earlier but could not be saved to the repository. */
+export async function recordPendingPublishes(repo: GitRepo) {
+	for (const attempt of listUnrecorded()) {
+		if (!attempt.remoteId || attempt.publishedAt === null) continue;
+		await record(
+			repo,
+			attempt.postId,
+			attempt.platform as PlatformId,
+			{ remoteId: attempt.remoteId, remoteUrl: attempt.remoteUrl },
+			attempt.publishedAt
+		);
 	}
-	return { started: claimed.map((t) => t.platform as PlatformId), skipped };
 }

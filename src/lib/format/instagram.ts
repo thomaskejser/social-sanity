@@ -18,7 +18,7 @@ function format(text: string): string {
 	if (urls.length === 0) return normalized;
 	const prose = normalized
 		.split('\n')
-		.filter((line) => findUrls(line).join(' ') !== line.trim())
+		.filter((line) => line.trim() === '' || findUrls(line).join(' ') !== line.trim())
 		.map((line) => urls.reduce((result, url) => result.split(url).join(LINK_MARKER), line))
 		.join('\n');
 	return [normalizeText(prose), urls.join('\n')].filter(Boolean).join('\n\n');

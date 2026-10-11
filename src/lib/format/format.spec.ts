@@ -73,6 +73,9 @@ describe('Instagram', () => {
 		expect(instagram.format('Read https://ex.com/post today. #news')).toBe(
 			'Read (link below) today. #news\n\nhttps://ex.com/post'
 		);
+		expect(instagram.format('Hello\n\nSee https://a.com\n\nBye')).toBe(
+			'Hello\n\nSee (link below)\n\nBye\n\nhttps://a.com'
+		);
 		expect(instagram.format('Two links:\nhttps://a.com https://b.com\nBye')).toBe(
 			'Two links:\nBye\n\nhttps://a.com\nhttps://b.com'
 		);

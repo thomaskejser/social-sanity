@@ -1,6 +1,7 @@
 import { Cron, scheduledJobs } from 'croner';
 import { refreshExpiringTokens } from './integrations/accounts.ts';
 import { listIntegrations } from './integrations/registry.ts';
+import { syncRepo } from './repo/sync.ts';
 
 /** Starts (or, after a dev hot reload, restarts) a named job. */
 function schedule(name: string, pattern: string, run: () => Promise<void>) {
@@ -16,5 +17,11 @@ export function startJobs() {
 			if (r.ok) console.info(`[jobs] refreshed ${r.platform} token`);
 			else console.error(`[jobs] failed to refresh ${r.platform} token: ${r.error}`);
 		}
+	});
+
+	schedule('sync-repo', '*/5 * * * *', async () => {
+		const result = await syncRepo();
+		if (result && !result.ok)
+			console.error(`[jobs] posts repository sync failed: ${result.message}`);
 	});
 }

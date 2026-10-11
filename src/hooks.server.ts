@@ -2,14 +2,14 @@ import { redirect } from '@sveltejs/kit';
 import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { SESSION_SECRET } from '$app/env/private';
 import { startJobs } from '#lib/server/jobs.ts';
-import { failInterruptedPublishing } from '#lib/server/posts/store.ts';
+import { failInterruptedAttempts } from '#lib/server/posts/attempts.ts';
 import { isValidSessionToken, SESSION_COOKIE } from '#lib/server/session.ts';
 
-/** `/media/` is public so Instagram can fetch post media; file names are random UUIDs. */
+/** `/media/` checks access itself: a session, or a signed link handed to Instagram. */
 const PUBLIC_PATHS = ['/login', '/media/'];
 
 export const init: ServerInit = () => {
-	failInterruptedPublishing();
+	failInterruptedAttempts();
 	startJobs();
 };
 

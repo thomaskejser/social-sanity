@@ -47,52 +47,41 @@ export const ftpServer = sqliteTable('ftp_server', {
 
 export type FtpServer = typeof ftpServer.$inferSelect;
 
-/** A post written once and published to several platforms. `text` is the shared draft text. */
-export const posts = sqliteTable('posts', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	text: text('text').notNull(),
-	createdAt: integer('created_at').notNull(),
+/** The git repository posts are read from and written to (single row, id = 1). An HTTPS token
+ * is never stored — only the name of the environment variable that holds it. */
+export const gitRepo = sqliteTable('git_repo', {
+	id: integer('id').primaryKey(),
+	url: text('url').notNull(),
+	branch: text('branch').notNull(),
+	postsDir: text('posts_dir').notNull(),
+	tokenEnvVar: text('token_env_var'),
+	tokenUsername: text('token_username').notNull(),
+	authorName: text('author_name').notNull(),
+	authorEmail: text('author_email').notNull(),
+	lastSyncAt: integer('last_sync_at'),
+	lastSyncOk: integer('last_sync_ok', { mode: 'boolean' }),
+	lastSyncMessage: text('last_sync_message'),
 	updatedAt: integer('updated_at').notNull()
 });
 
-export type Post = typeof posts.$inferSelect;
+export type GitRepo = typeof gitRepo.$inferSelect;
 
-/** Uploaded images and videos of a post, in display order. Files live in MEDIA_DIR. */
-export const postMedia = sqliteTable('post_media', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	postId: integer('post_id')
-		.notNull()
-		.references(() => posts.id, { onDelete: 'cascade' }),
-	position: integer('position').notNull(),
-	kind: text('kind', { enum: ['image', 'video'] }).notNull(),
-	mimeType: text('mime_type').notNull(),
-	/** Random file name under MEDIA_DIR; also the public URL path segment. */
-	fileName: text('file_name').notNull().unique(),
-	originalName: text('original_name').notNull(),
-	size: integer('size').notNull()
-});
-
-export type PostMedia = typeof postMedia.$inferSelect;
-
-/** One platform's version of a post: its own text and publishing state. */
-export const postTargets = sqliteTable(
-	'post_targets',
+/** Publishing in progress or failed, per post and platform. Successful publishes are recorded
+ * in the post's Markdown file instead; `unrecorded` holds one that succeeded but could not be
+ * written to the repository yet. `postId` is the post's path in the posts folder. */
+export const publishAttempts = sqliteTable(
+	'publish_attempts',
 	{
-		postId: integer('post_id')
-			.notNull()
-			.references(() => posts.id, { onDelete: 'cascade' }),
+		postId: text('post_id').notNull(),
 		platform: text('platform').notNull(),
-		text: text('text').notNull(),
-		status: text('status', { enum: ['draft', 'publishing', 'published', 'failed'] })
-			.notNull()
-			.default('draft'),
+		status: text('status', { enum: ['publishing', 'failed', 'unrecorded'] }).notNull(),
+		error: text('error'),
 		remoteId: text('remote_id'),
 		remoteUrl: text('remote_url'),
-		error: text('error'),
 		publishedAt: integer('published_at'),
 		updatedAt: integer('updated_at').notNull()
 	},
 	(table) => [primaryKey({ columns: [table.postId, table.platform] })]
 );
 
-export type PostTarget = typeof postTargets.$inferSelect;
+export type PublishAttempt = typeof publishAttempts.$inferSelect;

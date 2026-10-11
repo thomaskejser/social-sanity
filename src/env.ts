@@ -33,9 +33,9 @@ export const variables = defineEnvVars({
 			'Public origin of this app (e.g. https://social.example.com). Used for OAuth redirect URIs and media URLs. Defaults to the request origin.',
 		schema: (value) => (value ? value.replace(/\/$/, '') : undefined)
 	},
-	MEDIA_DIR: {
-		description: 'Directory for uploaded images and videos. Defaults to data/media.',
-		schema: (value) => value || 'data/media'
+	REPO_DIR: {
+		description: 'Where the app keeps its clone of the posts repository. Defaults to data/repo.',
+		schema: (value) => value || 'data/repo'
 	},
 	LINKEDIN_CLIENT_ID: { description: 'LinkedIn OAuth client ID.', schema: optional },
 	LINKEDIN_CLIENT_SECRET: { description: 'LinkedIn OAuth client secret.', schema: optional },

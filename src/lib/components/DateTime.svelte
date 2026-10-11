@@ -1,9 +1,11 @@
 <script lang="ts">
-	let { epochMs }: { epochMs: number } = $props();
+	let { epochMs, withTime = false }: { epochMs: number; withTime?: boolean } = $props();
 
 	const date = $derived(new Date(epochMs));
 </script>
 
 <time datetime={date.toISOString()}>
-	{date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+	{withTime
+		? date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+		: date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
 </time>
