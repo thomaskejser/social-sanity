@@ -104,6 +104,7 @@
 		--page-gutter: clamp(var(--space-md), 4vw, var(--space-2xl));
 		--card-min: 18rem;
 		--form-min: 24rem;
+		--media-height: 24rem;
 		--page-inset: max(var(--page-gutter), (100% - var(--page-width)) / 2);
 		--tap-target: 2.75rem;
 		--layer-sticky: 10;

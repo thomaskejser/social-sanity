@@ -41,6 +41,22 @@ changes the connection is refused until you save the settings again. The passwor
 it in an environment variable and enter that variable's name (e.g. `FTP_PASSWORD`). "Test
 connection" logs in and writes/deletes a probe file.
 
+## Posting
+
+- **Posts → New post** takes the text once, plus images or a video.
+- The preview page shows a card per platform with that platform's version of the text and media.
+  - LinkedIn keeps the text as written (normalized whitespace).
+  - Instagram moves links to the end of the caption, because links in captions are not clickable.
+  - Each card's text can be edited; the preview, character count and checks update as you type.
+  - "Reset text" restores the generated version.
+- Publish to one platform from its card, or to every ready platform with "Publish to all".
+  - Publishing runs in the background and the page refreshes until it finishes.
+  - A platform is ready when it is connected and its checks show no errors.
+- Instagram fetches media from a public URL.
+  - With a file upload server that has a public URL, media is uploaded there first.
+  - Otherwise it is served from `<PUBLIC_BASE_URL>/media/...`, which must be reachable from the internet.
+- Instagram accepts only JPEG images; LinkedIn accepts JPEG, PNG and GIF, and MP4 video.
+
 ## Scripts
 
 | Command                           | Purpose                                   |
@@ -59,6 +75,7 @@ connection" logs in and writes/deletes a probe file.
 - Run it behind a TLS-terminating reverse proxy and set `PROTOCOL_HEADER=x-forwarded-proto`.
   Also set `HOST_HEADER=x-forwarded-host` if the proxy rewrites the host.
 - Plain-HTTP access without those headers makes form posts fail with 403 (CSRF check).
+- Set `BODY_SIZE_LIMIT=300M` (or larger) so video uploads are accepted; the default is 512 KB.
 
 ## Layout
 

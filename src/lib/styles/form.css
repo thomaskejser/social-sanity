@@ -170,6 +170,10 @@
 		}
 	}
 
+	.compose-form {
+		max-inline-size: var(--measure);
+	}
+
 	.login-form {
 		inline-size: min(100%, var(--form-min));
 	}

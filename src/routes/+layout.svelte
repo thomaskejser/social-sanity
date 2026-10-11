@@ -10,6 +10,7 @@
 
 	const navItems: NavItem[] = [
 		{ href: resolve('/'), label: 'Home', match: '/' },
+		{ href: resolve('/posts'), label: 'Posts', match: '/posts' },
 		{ href: resolve('/integrations'), label: 'Integrations', match: '/integrations' }
 	];
 </script>

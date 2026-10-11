@@ -83,6 +83,55 @@
 		}
 	}
 
+	.post-preview {
+		padding: var(--space-md);
+		border: var(--border-width) solid var(--border);
+		border-radius: var(--radius-md);
+		background-color: var(--surface);
+
+		& > * + * {
+			margin-block-start: var(--space-sm);
+		}
+	}
+
+	.media-gallery {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: 100%;
+		gap: var(--space-xs);
+		padding: 0;
+		list-style: none;
+		overflow-x: auto;
+		scroll-snap-type: inline mandatory;
+		overscroll-behavior-inline: contain;
+
+		& > li {
+			position: relative;
+			display: grid;
+			place-items: center;
+			min-inline-size: 0;
+			max-inline-size: none;
+			scroll-snap-align: start;
+			border-radius: var(--radius-sm);
+			background-color: var(--surface-sunken);
+		}
+
+		& :is(img, video) {
+			inline-size: 100%;
+			max-block-size: var(--media-height);
+			object-fit: contain;
+		}
+
+		& small {
+			position: absolute;
+			inset-block-start: var(--space-xs);
+			inset-inline-end: var(--space-xs);
+			padding-inline: var(--space-xs);
+			border-radius: var(--radius-round);
+			background-color: color-mix(in oklab, var(--surface) 85%, transparent);
+		}
+	}
+
 	.card-note {
 		font-size: var(--size-sm);
 		color: var(--text-muted);

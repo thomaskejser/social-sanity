@@ -7,6 +7,7 @@
 		hint,
 		error,
 		required = false,
+		readonly = false,
 		placeholder
 	}: {
 		label: string;
@@ -16,6 +17,7 @@
 		hint?: string;
 		error?: string;
 		required?: boolean;
+		readonly?: boolean;
 		placeholder?: string;
 	} = $props();
 
@@ -29,6 +31,7 @@
 		{name}
 		{rows}
 		{required}
+		{readonly}
 		{placeholder}
 		bind:value
 		aria-invalid={error ? 'true' : undefined}

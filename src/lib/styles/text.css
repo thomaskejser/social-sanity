@@ -69,6 +69,20 @@
 		overflow-wrap: anywhere;
 	}
 
+	.post-author {
+		font-weight: var(--weight-bold);
+	}
+
+	.post-text {
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+
+		& [data-token] {
+			color: var(--accent);
+			font-weight: var(--weight-bold);
+		}
+	}
+
 	small {
 		font-size: var(--size-sm);
 	}

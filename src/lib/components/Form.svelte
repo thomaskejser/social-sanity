@@ -8,6 +8,7 @@
 		label,
 		variant,
 		resetOnSuccess = true,
+		enctype,
 		children
 	}: {
 		action?: string;
@@ -18,6 +19,7 @@
 		variant?: string;
 		/** Set false for edit forms whose fields should keep their values after saving. */
 		resetOnSuccess?: boolean;
+		enctype?: 'multipart/form-data';
 		children: Snippet;
 	} = $props();
 </script>
@@ -25,6 +27,7 @@
 <form
 	{action}
 	{method}
+	{enctype}
 	aria-label={label}
 	class={variant ? `${variant}-form` : undefined}
 	use:enhance={() =>

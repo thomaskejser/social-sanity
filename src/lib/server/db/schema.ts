@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 /** Free-form key/value application settings (e.g. the filter interests prompt, budget caps). */
 export const settings = sqliteTable('settings', {
@@ -46,3 +46,53 @@ export const ftpServer = sqliteTable('ftp_server', {
 });
 
 export type FtpServer = typeof ftpServer.$inferSelect;
+
+/** A post written once and published to several platforms. `text` is the shared draft text. */
+export const posts = sqliteTable('posts', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	text: text('text').notNull(),
+	createdAt: integer('created_at').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});
+
+export type Post = typeof posts.$inferSelect;
+
+/** Uploaded images and videos of a post, in display order. Files live in MEDIA_DIR. */
+export const postMedia = sqliteTable('post_media', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	postId: integer('post_id')
+		.notNull()
+		.references(() => posts.id, { onDelete: 'cascade' }),
+	position: integer('position').notNull(),
+	kind: text('kind', { enum: ['image', 'video'] }).notNull(),
+	mimeType: text('mime_type').notNull(),
+	/** Random file name under MEDIA_DIR; also the public URL path segment. */
+	fileName: text('file_name').notNull().unique(),
+	originalName: text('original_name').notNull(),
+	size: integer('size').notNull()
+});
+
+export type PostMedia = typeof postMedia.$inferSelect;
+
+/** One platform's version of a post: its own text and publishing state. */
+export const postTargets = sqliteTable(
+	'post_targets',
+	{
+		postId: integer('post_id')
+			.notNull()
+			.references(() => posts.id, { onDelete: 'cascade' }),
+		platform: text('platform').notNull(),
+		text: text('text').notNull(),
+		status: text('status', { enum: ['draft', 'publishing', 'published', 'failed'] })
+			.notNull()
+			.default('draft'),
+		remoteId: text('remote_id'),
+		remoteUrl: text('remote_url'),
+		error: text('error'),
+		publishedAt: integer('published_at'),
+		updatedAt: integer('updated_at').notNull()
+	},
+	(table) => [primaryKey({ columns: [table.postId, table.platform] })]
+);
+
+export type PostTarget = typeof postTargets.$inferSelect;

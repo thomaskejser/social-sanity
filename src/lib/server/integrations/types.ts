@@ -47,6 +47,7 @@ export async function readJson(response: Response, what: string): Promise<Record
 			(typeof body.error === 'object'
 				? ((body.error as Record<string, unknown>).message as string)
 				: (body.error as string)) ??
+			(body.message as string) ??
 			response.statusText;
 		throw new IntegrationError(`${what} failed (${response.status}): ${detail}`);
 	}
