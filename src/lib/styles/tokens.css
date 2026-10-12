@@ -56,6 +56,7 @@
 		--font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
 		--font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 
+		--icon-size: 1.1em;
 		--size-sm: 0.875rem;
 		--size-md: 1rem;
 		--size-lg: 1.25rem;
@@ -103,7 +104,6 @@
 		--page-width: 72rem;
 		--page-gutter: clamp(var(--space-md), 4vw, var(--space-2xl));
 		--card-min: 18rem;
-		--form-min: 24rem;
 		--media-height: 24rem;
 		--page-inset: max(var(--page-gutter), (100% - var(--page-width)) / 2);
 		--tap-target: 2.75rem;

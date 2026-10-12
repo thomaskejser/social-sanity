@@ -11,7 +11,7 @@ const ROW_ID = 1;
 
 export class RepoNotConfiguredError extends Error {
 	constructor() {
-		super('No posts repository is configured. Add one on the Integrations page.');
+		super('No posts repository is configured. Add one on the Settings page.');
 	}
 }
 

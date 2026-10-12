@@ -19,13 +19,22 @@ export type ConnectedIdentity = TokenGrant & {
 	displayName: string;
 };
 
+/** How to create the developer app the OAuth flow runs through. */
+export type AppSetup = {
+	/** Page in the developer console that starts creating a new app. */
+	createAppUrl: string;
+	/** Steps in the console, in order. The redirect URI is shown next to them. */
+	steps: string[];
+	clientIdLabel: string;
+	clientSecretLabel: string;
+};
+
 export interface Integration {
 	id: PlatformId;
 	name: string;
-	/** Env vars that must be set for this integration to be usable. */
-	requiredEnv: string[];
 	/** Developer console where the OAuth app (and its redirect URI) is registered. */
 	consoleUrl: string;
+	setup: AppSetup;
 	/** Short note shown on the integrations page, e.g. account-type requirements. */
 	note?: string;
 	/** Origin of the OAuth consent page; the only external origin we redirect to. */

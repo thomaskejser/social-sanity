@@ -1,6 +1,6 @@
 # Social Sanity
 
-Self-hosted, single-user app to **publish** to LinkedIn and Instagram (reformatted per platform) and to
+Single-user app, run locally on your own machine, to **publish** to LinkedIn and Instagram (reformatted per platform) and to
 **filter** what you see on those platforms via a Firefox extension that hides unwanted posts.
 
 Built with SvelteKit (Svelte 5, TypeScript) on Node via `@sveltejs/adapter-node`, SQLite via Drizzle.
@@ -10,8 +10,6 @@ Built with SvelteKit (Svelte 5, TypeScript) on Node via `@sveltejs/adapter-node`
 ```sh
 npm install
 cp .env.example .env
-npm run hash-password -- 'your password'   # paste into APP_PASSWORD_HASH
-openssl rand -base64 48                    # SESSION_SECRET
 openssl rand -base64 32                    # TOKEN_ENC_KEY
 npm run db:push                            # create/update the SQLite schema (needs DATABASE_URL in env)
 npm run dev
@@ -19,17 +17,17 @@ npm run dev
 
 ## Connecting social accounts
 
-Accounts are connected with OAuth on the **Integrations** page — you sign in on the platform's own
-page and Social Sanity stores only an encrypted access token. Each platform needs a developer app:
-
-- **LinkedIn** — create an app at <https://www.linkedin.com/developers/apps>, add the
-  _Share on LinkedIn_ and _Sign In with LinkedIn using OpenID Connect_ products, register the
-  redirect URI shown on the Integrations page, and set `LINKEDIN_CLIENT_ID` / `LINKEDIN_CLIENT_SECRET`.
+- Accounts are connected with OAuth on the **Integrations** page.
+  - You sign in on the platform's own page; Social Sanity keeps only an encrypted access token.
+- Both platforms only let registered apps sign in on a user's behalf, so each needs a developer app of your own, created once.
+  - The Integrations card links to the platform's app creation page, lists the steps and shows the redirect URL to register.
+  - Paste the app's client ID and secret into the card; the secret is stored encrypted with `TOKEN_ENC_KEY`.
+  - "Change app" forgets the credentials so another app can be entered.
+- **LinkedIn** needs the _Share on LinkedIn_ and _Sign In with LinkedIn using OpenID Connect_ products.
   Tokens last 60 days; reconnect when the page warns you.
-- **Instagram** — create a Meta app with _Instagram API with Instagram Login_ at
-  <https://developers.facebook.com/apps>, add your Professional account as a tester, register the
-  redirect URI (must be HTTPS — set `PUBLIC_BASE_URL` to a tunnel or real host), and set
-  `INSTAGRAM_APP_ID` / `INSTAGRAM_APP_SECRET`. Tokens are refreshed automatically.
+- **Instagram** uses _Instagram API with Instagram Login_ with your Professional account added as a tester.
+  The redirect URI must be HTTPS, so set `PUBLIC_BASE_URL` to a tunnel or real host.
+  Tokens are refreshed automatically.
 
 ### FTP / SFTP upload
 
@@ -43,7 +41,7 @@ connection" logs in and writes/deletes a probe file.
 
 ## Posts repository
 
-- Posts live as Markdown files in a git repository, added under **Integrations → Posts repository**.
+- Posts live as Markdown files in a git repository, added on the **Settings** page.
 - The app keeps its own clone (`REPO_DIR`, default `data/repo`).
   - It pulls every 5 minutes, and on "Pull now" on the Posts page.
   - Every change it makes is committed with the configured author and pushed straight away.
@@ -96,7 +94,7 @@ connection" logs in and writes/deletes a probe file.
   - Successful publishes are committed to the front matter; failures are shown in the app only.
 - Instagram fetches media from a public URL.
   - With a file upload server that has a public URL, media is uploaded there first.
-  - Otherwise it gets a signed link to `<PUBLIC_BASE_URL>/media/...` that expires after an hour.
+  - Otherwise it fetches `<PUBLIC_BASE_URL>/media/...`, which exposes the app at that address.
 - Instagram accepts only JPEG images; LinkedIn accepts JPEG, PNG and GIF, and MP4 video.
 - GitHub rejects files over 100 MB, so large videos may not push.
 
@@ -113,6 +111,8 @@ connection" logs in and writes/deletes a probe file.
 
 ## Running in production
 
+- There is no login: anyone who can reach the port can use the app and publish as you.
+  - Start the build with `HOST=127.0.0.1 node build` so it listens on this machine only.
 - Build and start with `npm run build && node build`.
 - `@sveltejs/adapter-node` 6 assumes the public origin is **HTTPS** and does not read an `ORIGIN` variable.
 - Run it behind a TLS-terminating reverse proxy and set `PROTOCOL_HEADER=x-forwarded-proto`.
@@ -124,4 +124,11 @@ connection" logs in and writes/deletes a probe file.
 
 - `src/lib/components/` — every UI control is a component
 - `src/lib/styles/` — global stylesheets and design tokens (no per-component styles)
-- `src/lib/server/` — server-only code (db, auth, crypto)
+- `src/lib/server/` — server-only code (db, crypto, integrations, publishing)
+
+## Credits
+
+- Platform logos come from the `kejser-web:social-logos` skill, in `src/lib/social-logos/`.
+  - [Simple Icons](https://simpleicons.org) (CC0), except LinkedIn.
+  - LinkedIn: [Font Awesome Free](https://fontawesome.com) ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)).
+- The logos are trademarks of their owners and only refer to the platforms.

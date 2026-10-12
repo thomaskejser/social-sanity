@@ -19,7 +19,7 @@ export const actions: Actions = {
 			.filter((value): value is File => value instanceof File && value.size > 0);
 
 		const errors: FormErrors = {};
-		if (!repo) errors.form = 'Add a posts repository on the Integrations page first.';
+		if (!repo) errors.form = 'Add a posts repository on the Settings page first.';
 		if (title.length > 200) errors.title = 'Keep the title under 200 characters.';
 		if (!text.trim() && files.length === 0) errors.text = 'Write some text or add media.';
 		if (files.length > MAX_MEDIA_FILES) {

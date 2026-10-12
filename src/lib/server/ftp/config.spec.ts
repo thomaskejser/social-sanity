@@ -92,13 +92,7 @@ describe('validateEnvVarName', () => {
 	});
 
 	it("refuses the app's own secrets", () => {
-		for (const name of [
-			'TOKEN_ENC_KEY',
-			'SESSION_SECRET',
-			'APP_PASSWORD_HASH',
-			'LINKEDIN_CLIENT_SECRET',
-			'ANTHROPIC_API_KEY'
-		]) {
+		for (const name of ['TOKEN_ENC_KEY', 'PUBLIC_BASE_URL', 'ANTHROPIC_API_KEY']) {
 			expect(validateEnvVarName(name)).toMatch(/used by Social Sanity/);
 		}
 	});
@@ -115,6 +109,6 @@ describe('readPassword', () => {
 	});
 
 	it('never reads reserved variables', () => {
-		expect(readPassword('SESSION_SECRET', { SESSION_SECRET: 'x'.repeat(40) })).toBeUndefined();
+		expect(readPassword('TOKEN_ENC_KEY', { TOKEN_ENC_KEY: 'x'.repeat(44) })).toBeUndefined();
 	});
 });

@@ -1,36 +1,40 @@
-import {
-	INSTAGRAM_APP_ID,
-	INSTAGRAM_APP_SECRET,
-	LINKEDIN_CLIENT_ID,
-	LINKEDIN_CLIENT_SECRET
-} from '$app/env/private';
+import { getOAuthClient } from './clients.ts';
 import { createInstagram } from './instagram.ts';
 import { createLinkedIn } from './linkedin.ts';
 import type { Integration, OAuthClientConfig, PlatformId } from './types.ts';
 
 export type IntegrationEntry = {
 	integration: Integration;
-	/** False when the OAuth client credentials are missing from the environment. */
+	/** False until the developer app's credentials have been entered. */
 	configured: boolean;
+	/** Client ID of the developer app, when configured. */
+	clientId: string | null;
 };
 
-function clientConfig(clientId?: string, clientSecret?: string): OAuthClientConfig | undefined {
-	return clientId && clientSecret ? { clientId, clientSecret } : undefined;
-}
+const factories: Record<PlatformId, (config: OAuthClientConfig) => Integration> = {
+	linkedin: createLinkedIn,
+	instagram: createInstagram
+};
 
-const linkedin = clientConfig(LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET);
-const instagram = clientConfig(INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET);
 const unconfigured: OAuthClientConfig = { clientId: '', clientSecret: '' };
 
-const entries: Record<PlatformId, IntegrationEntry> = {
-	linkedin: { integration: createLinkedIn(linkedin ?? unconfigured), configured: !!linkedin },
-	instagram: { integration: createInstagram(instagram ?? unconfigured), configured: !!instagram }
-};
+function entry(id: PlatformId): IntegrationEntry {
+	const client = getOAuthClient(id);
+	return {
+		integration: factories[id](client ?? unconfigured),
+		configured: !!client,
+		clientId: client?.clientId ?? null
+	};
+}
 
 export function listIntegrations(): IntegrationEntry[] {
-	return Object.values(entries);
+	return (Object.keys(factories) as PlatformId[]).map(entry);
 }
 
 export function getIntegration(id: string): IntegrationEntry | undefined {
-	return Object.hasOwn(entries, id) ? entries[id as PlatformId] : undefined;
+	return Object.hasOwn(factories, id) ? entry(id as PlatformId) : undefined;
+}
+
+export function isPlatformId(id: string): id is PlatformId {
+	return Object.hasOwn(factories, id);
 }

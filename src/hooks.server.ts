@@ -1,28 +1,8 @@
-import { redirect } from '@sveltejs/kit';
-import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
-import { SESSION_SECRET } from '$app/env/private';
+import type { ServerInit } from '@sveltejs/kit/hooks';
 import { startJobs } from '#lib/server/jobs.ts';
 import { failInterruptedAttempts } from '#lib/server/posts/attempts.ts';
-import { isValidSessionToken, SESSION_COOKIE } from '#lib/server/session.ts';
-
-/** `/media/` checks access itself: a session, or a signed link handed to Instagram. */
-const PUBLIC_PATHS = ['/login', '/media/'];
 
 export const init: ServerInit = () => {
 	failInterruptedAttempts();
 	startJobs();
-};
-
-export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.authenticated = isValidSessionToken(
-		event.cookies.get(SESSION_COOKIE),
-		SESSION_SECRET
-	);
-
-	const isPublic = PUBLIC_PATHS.some((path) => event.url.pathname.startsWith(path));
-	if (!event.locals.authenticated && !isPublic) {
-		redirect(303, `/login?redirectTo=${encodeURIComponent(event.url.pathname + event.url.search)}`);
-	}
-
-	return resolve(event);
 };

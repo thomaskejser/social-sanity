@@ -1,10 +1,18 @@
 <script lang="ts" module>
+	import type { PlatformId } from '#lib/format/types.ts';
+
 	export type IntegrationView = {
-		id: string;
+		id: PlatformId;
 		name: string;
 		note: string | null;
 		consoleUrl: string;
-		requiredEnv: string[];
+		setup: {
+			createAppUrl: string;
+			steps: string[];
+			clientIdLabel: string;
+			clientSecretLabel: string;
+		};
+		clientId: string | null;
 		redirectUri: string;
 		autoRefresh: boolean;
 		configured: boolean;
@@ -15,19 +23,28 @@
 			scopes: string[];
 		} | null;
 	};
+
+	export type ClientFormState = {
+		values: { clientId: string };
+		errors: { clientId?: string; clientSecret?: string };
+	};
 </script>
 
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { integrationStatus } from '#lib/integrations/status.ts';
+	import SocialLogo from '#lib/social-logos/SocialLogo.svelte';
 	import Badge from './Badge.svelte';
 	import Button from './Button.svelte';
+	import CopyField from './CopyField.svelte';
 	import DateTime from './DateTime.svelte';
 	import ExternalLink from './ExternalLink.svelte';
 	import Form from './Form.svelte';
 	import LinkButton from './LinkButton.svelte';
+	import TextField from './TextField.svelte';
 
-	let { integration }: { integration: IntegrationView } = $props();
+	let { integration, form }: { integration: IntegrationView; form: ClientFormState | null } =
+		$props();
 
 	const status = $derived(integrationStatus(integration.configured, integration.account));
 	const connectHref = $derived(
@@ -37,7 +54,9 @@
 
 <article class="card" aria-labelledby="integration-{integration.id}">
 	<header>
-		<h2 id="integration-{integration.id}">{integration.name}</h2>
+		<h2 id="integration-{integration.id}">
+			<SocialLogo brand={integration.id} tone="brand" />{integration.name}
+		</h2>
 		<Badge tone={status.tone}>{status.label}</Badge>
 	</header>
 
@@ -59,43 +78,68 @@
 		</dl>
 	{/if}
 
-	{#if integration.note}
-		<p class="card-note">{integration.note}</p>
-	{/if}
-
-	{#if integration.configured || integration.account}
+	{#if integration.configured}
+		<p class="card-note">
+			Signs in through your {integration.name} app
+			<code>{integration.clientId}</code>. Manage it in the
+			<ExternalLink href={integration.consoleUrl}>developer console</ExternalLink>.
+		</p>
 		<footer>
-			{#if integration.configured}
-				<LinkButton
-					href={connectHref}
-					reload
-					action={integration.account ? 'secondary' : 'primary'}
-				>
-					{integration.account ? 'Reconnect' : 'Connect'}
-				</LinkButton>
-			{/if}
+			<LinkButton href={connectHref} reload action={integration.account ? 'secondary' : 'primary'}>
+				{integration.account ? 'Reconnect' : 'Connect'}
+			</LinkButton>
 			{#if integration.account}
 				<Form action="?/disconnect" label="Disconnect {integration.name}">
 					<input type="hidden" name="platform" value={integration.id} />
 					<Button type="submit" action="destructive">Disconnect</Button>
 				</Form>
 			{/if}
+			<Form action="?/removeClient" label="Remove the {integration.name} app">
+				<input type="hidden" name="platform" value={integration.id} />
+				<Button type="submit" action="secondary">Change app</Button>
+			</Form>
 		</footer>
-	{/if}
-
-	{#if !integration.configured}
+	{:else}
 		<p>
-			To enable {integration.name}, create an app in the
-			<ExternalLink href={integration.consoleUrl}>developer console</ExternalLink>, set
-			{#each integration.requiredEnv as name, i (name)}<code>{name}</code>{i <
-				integration.requiredEnv.length - 1
-					? ' and '
-					: ''}{/each}
-			in <code>.env</code>, and restart the app.
+			{integration.name} only lets registered apps sign in on your behalf, so you create your own app
+			once. It stays private to you; the posts are made as you.
 		</p>
+		{#if integration.note}
+			<p class="card-note">{integration.note}</p>
+		{/if}
+		<p>
+			<ExternalLink href={integration.setup.createAppUrl} action="primary">
+				Create your {integration.name} app
+			</ExternalLink>
+		</p>
+		<ol>
+			{#each integration.setup.steps as step (step)}
+				<li>{step}</li>
+			{/each}
+		</ol>
+		<CopyField label="Redirect URL" value={integration.redirectUri} />
+		<Form action="?/saveClient" label="{integration.name} app credentials" variant="settings">
+			<input type="hidden" name="platform" value={integration.id} />
+			<TextField
+				label={integration.setup.clientIdLabel}
+				name="clientId"
+				value={form?.values.clientId ?? ''}
+				error={form?.errors.clientId}
+				autocomplete="off"
+				required
+			/>
+			<TextField
+				label={integration.setup.clientSecretLabel}
+				name="clientSecret"
+				type="password"
+				error={form?.errors.clientSecret}
+				hint="Stored encrypted in this app's database."
+				autocomplete="off"
+				required
+			/>
+			<footer>
+				<Button type="submit">Save app</Button>
+			</footer>
+		</Form>
 	{/if}
-
-	<p class="card-note">
-		Redirect URI to register: <code>{integration.redirectUri}</code>
-	</p>
 </article>

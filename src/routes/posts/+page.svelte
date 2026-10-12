@@ -31,8 +31,7 @@
 
 {#if !data.repo}
 	<Alert tone="warn">
-		No posts repository yet. Add one on the Integrations page; posts are read from and written to
-		it.
+		No posts repository yet. Add one on the Settings page; posts are read from and written to it.
 	</Alert>
 {:else}
 	{#if form?.sync}

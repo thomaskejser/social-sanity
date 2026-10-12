@@ -44,6 +44,12 @@
 		text-decoration-thickness: var(--underline-thick);
 	}
 
+	.platform-name {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
 	dl {
 		display: grid;
 		grid-template-columns: max-content minmax(0, 1fr);

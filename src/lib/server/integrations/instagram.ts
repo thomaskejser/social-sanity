@@ -35,8 +35,18 @@ export function createInstagram(config: OAuthClientConfig): Integration {
 	return {
 		id: 'instagram',
 		name: 'Instagram',
-		requiredEnv: ['INSTAGRAM_APP_ID', 'INSTAGRAM_APP_SECRET'],
 		consoleUrl: 'https://developers.facebook.com/apps',
+		setup: {
+			createAppUrl: 'https://developers.facebook.com/apps/creation/',
+			steps: [
+				'Create the app and pick the use case for managing content on Instagram (the Instagram API).',
+				'Under "API setup with Instagram login", add your Instagram Professional account as an Instagram tester, then accept the invite in Instagram.',
+				'Under "Set up Instagram business login", add the redirect URL below to the OAuth redirect URIs.',
+				'Copy the Instagram app ID and Instagram app secret from the same page into the form below. These differ from the Meta app ID at the top of the dashboard.'
+			],
+			clientIdLabel: 'Instagram app ID',
+			clientSecretLabel: 'Instagram app secret'
+		},
 		note: 'Requires an Instagram Professional (Business or Creator) account added as a tester on your Meta app. Tokens are refreshed automatically.',
 
 		authorizeOrigin: new URL(AUTHORIZE_URL).origin,

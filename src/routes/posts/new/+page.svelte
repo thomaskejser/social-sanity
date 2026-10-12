@@ -24,7 +24,7 @@
 </PageHeader>
 
 {#if !data.repoConfigured}
-	<Alert tone="warn">Add a posts repository on the Integrations page before writing posts.</Alert>
+	<Alert tone="warn">Add a posts repository on the Settings page before writing posts.</Alert>
 {/if}
 {#if form?.errors?.form}
 	<Alert tone="danger">{form.errors.form}</Alert>

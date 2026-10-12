@@ -4,7 +4,6 @@
 	import PageHeader from '#lib/components/PageHeader.svelte';
 	import CardGrid from '#lib/components/CardGrid.svelte';
 	import FtpCard from '#lib/components/FtpCard.svelte';
-	import RepoCard from '#lib/components/RepoCard.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -33,23 +32,17 @@
 {#if form && 'error' in form}
 	<Alert tone="danger">{form.error}</Alert>
 {/if}
+{#if form && 'clientSaved' in form}
+	<Alert tone="ok">{form.clientSaved} app saved. Connect your account next.</Alert>
+{/if}
+{#if form && 'clientRemoved' in form}
+	<Alert tone="ok">{form.clientRemoved} app removed. Enter the new app's credentials.</Alert>
+{/if}
 {#if form && 'ftpSaved' in form}
 	<Alert tone="ok">FTP settings saved. Use "Test connection" to check them.</Alert>
 {/if}
 {#if form && 'ftpRemoved' in form}
 	<Alert tone="ok">FTP server removed.</Alert>
-{/if}
-{#if form && 'repoSaved' in form}
-	<Alert tone="ok">Repository settings saved.</Alert>
-{/if}
-{#if form && 'repoSync' in form && form.repoSync}
-	<Alert tone={form.repoSync.ok ? 'ok' : 'danger'}>Repository: {form.repoSync.message}</Alert>
-{/if}
-{#if form && 'repoTest' in form && form.repoTest}
-	<Alert tone={form.repoTest.ok ? 'ok' : 'danger'}>Repository: {form.repoTest.message}</Alert>
-{/if}
-{#if form && 'repoRemoved' in form}
-	<Alert tone="ok">Repository removed.</Alert>
 {/if}
 {#if form && 'ftpTest' in form && form.ftpTest}
 	<Alert tone={form.ftpTest.ok ? 'ok' : 'danger'}>FTP: {form.ftpTest.message}</Alert>
@@ -57,8 +50,12 @@
 
 <CardGrid>
 	{#each data.integrations as integration (integration.id)}
-		<IntegrationCard {integration} />
+		<IntegrationCard
+			{integration}
+			form={form && 'client' in form && form.client?.platform === integration.id
+				? form.client
+				: null}
+		/>
 	{/each}
-	<RepoCard repo={data.repo} form={form && 'repo' in form ? (form.repo ?? null) : null} />
 	<FtpCard server={data.ftp} form={form && 'ftp' in form ? (form.ftp ?? null) : null} />
 </CardGrid>

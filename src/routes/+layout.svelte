@@ -3,15 +3,16 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import SiteHeader, { type NavItem } from '#lib/components/SiteHeader.svelte';
-	import type { LayoutProps } from './$types';
 
-	let { data, children }: LayoutProps = $props();
+	let { children } = $props();
 
 	const navItems: NavItem[] = [
 		{ href: resolve('/'), label: 'Home', match: '/' },
 		{ href: resolve('/posts'), label: 'Posts', match: '/posts' },
-		{ href: resolve('/integrations'), label: 'Integrations', match: '/integrations' }
+		{ href: resolve('/integrations'), label: 'Integrations', match: '/integrations' },
+		{ href: resolve('/settings'), label: 'Settings', match: '/settings' }
 	];
 </script>
 
@@ -20,8 +21,10 @@
 	<title>Social Sanity</title>
 </svelte:head>
 
-<SiteHeader items={navItems} currentPath={page.url.pathname} showLogout={data.authenticated} />
+<SiteHeader items={navItems} currentPath={page.url.pathname} />
 
 <main>
 	{@render children()}
 </main>
+
+<SiteFooter />

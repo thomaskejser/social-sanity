@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SocialLogo from '#lib/social-logos/SocialLogo.svelte';
 	import { hasErrors, platformFormat, type PlatformId } from '#lib/format/index.ts';
 	import { charCount } from '#lib/format/text.ts';
 	import { targetStatus, type TargetStatus } from '#lib/posts/status.ts';
@@ -47,7 +48,9 @@
 
 <article class="card" aria-labelledby="post-{platformId}">
 	<header>
-		<h2 id="post-{platformId}">{platform.name}</h2>
+		<h2 id="post-{platformId}">
+			<SocialLogo brand={platformId} tone="brand" />{platform.name}
+		</h2>
 		<Badge tone={badge.tone}>{badge.label}</Badge>
 	</header>
 

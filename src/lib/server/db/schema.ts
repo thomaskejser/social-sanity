@@ -22,6 +22,16 @@ export const accounts = sqliteTable('accounts', {
 
 export type Account = typeof accounts.$inferSelect;
 
+/** The developer app each platform's OAuth flow runs through. The secret is encrypted at rest. */
+export const oauthClients = sqliteTable('oauth_clients', {
+	platform: text('platform').primaryKey(),
+	clientId: text('client_id').notNull(),
+	clientSecretEnc: text('client_secret_enc').notNull(),
+	updatedAt: integer('updated_at').notNull()
+});
+
+export type OAuthClient = typeof oauthClients.$inferSelect;
+
 /** The FTP/SFTP server files are uploaded to (single row, id = 1). The password is never stored —
  * only the name of the environment variable that holds it. */
 export const ftpServer = sqliteTable('ftp_server', {

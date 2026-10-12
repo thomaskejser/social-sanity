@@ -1,12 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { PUBLIC_BASE_URL, SESSION_SECRET } from '$app/env/private';
+import { PUBLIC_BASE_URL } from '$app/env/private';
 import { hasErrors, platformFormat, type DraftMedia, type PlatformId } from '#lib/format/index.ts';
 import { mediaUrl } from '#lib/media.ts';
 import type { Account, GitRepo, PublishAttempt } from '../db/schema.ts';
 import { getFtpServer } from '../ftp/store.ts';
 import { uploadToFileServer } from '../ftp/transfer.ts';
 import { getAccessToken, listAccounts } from '../integrations/accounts.ts';
-import { signMediaPath } from '../media/signing.ts';
 import {
 	clearAttempt,
 	failAttempt,
@@ -86,7 +85,7 @@ async function publicMediaUrl(item: PostMediaFile): Promise<string> {
 			`PUBLIC_BASE_URL is ${PUBLIC_BASE_URL}, which Instagram can't reach. Use a public address or the file upload integration.`
 		);
 	}
-	return `${PUBLIC_BASE_URL}${mediaUrl(item.postsPath)}?${signMediaPath(SESSION_SECRET, item.postsPath)}`;
+	return `${PUBLIC_BASE_URL}${mediaUrl(item.postsPath)}`;
 }
 
 function toPublishMedia(item: PostMediaFile): PublishMedia {

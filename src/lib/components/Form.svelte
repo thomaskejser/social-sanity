@@ -15,7 +15,7 @@
 		method?: 'GET' | 'POST';
 		/** Accessible name for the form. */
 		label?: string;
-		/** Semantic modifier, e.g. "login" renders `.login-form`. */
+		/** Semantic modifier, e.g. "compose" renders `.compose-form`. */
 		variant?: string;
 		/** Set false for edit forms whose fields should keep their values after saving. */
 		resetOnSuccess?: boolean;

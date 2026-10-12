@@ -3,22 +3,13 @@ import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { error } from '@sveltejs/kit';
-import { SESSION_SECRET } from '$app/env/private';
 import { mediaTypeForFile } from '#lib/media.ts';
-import { isValidMediaSignature } from '#lib/server/media/signing.ts';
 import { getGitRepo, postsRoot } from '#lib/server/repo/store.ts';
 import type { RequestHandler } from './$types';
 
-/** Serves media from the posts folder to a logged-in user, or to anyone holding a signed link.
- * Supports byte ranges so browsers can seek in videos. */
-export const GET: RequestHandler = async ({ params, request, url, locals }) => {
+/** Serves media from the posts folder. Supports byte ranges so browsers can seek in videos. */
+export const GET: RequestHandler = async ({ params, request }) => {
 	const mediaPath = params.path;
-	if (
-		!locals.authenticated &&
-		!isValidMediaSignature(SESSION_SECRET, mediaPath, url.searchParams)
-	) {
-		error(404, 'Not found');
-	}
 	const repo = getGitRepo();
 	const type = mediaTypeForFile(mediaPath);
 	if (!repo || !type) error(404, 'Not found');

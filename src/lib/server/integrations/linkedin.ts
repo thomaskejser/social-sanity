@@ -19,8 +19,18 @@ export function createLinkedIn(config: OAuthClientConfig): Integration {
 	return {
 		id: 'linkedin',
 		name: 'LinkedIn',
-		requiredEnv: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'],
 		consoleUrl: 'https://www.linkedin.com/developers/apps',
+		setup: {
+			createAppUrl: 'https://www.linkedin.com/developers/apps/new',
+			steps: [
+				'Create the app. LinkedIn asks for a Company Page to link it to; any page you administer works, and the app still posts as you.',
+				'On the Products tab, request "Share on LinkedIn" and "Sign In with LinkedIn using OpenID Connect".',
+				'On the Auth tab, add the redirect URL below under "Authorized redirect URLs for your app".',
+				'Copy the Client ID and the Primary Client Secret from the Auth tab into the form below.'
+			],
+			clientIdLabel: 'Client ID',
+			clientSecretLabel: 'Primary Client Secret'
+		},
 		note: 'Add the "Share on LinkedIn" and "Sign In with LinkedIn using OpenID Connect" products to your app. Tokens last 60 days and must then be reconnected.',
 
 		authorizeOrigin: new URL(AUTHORIZE_URL).origin,

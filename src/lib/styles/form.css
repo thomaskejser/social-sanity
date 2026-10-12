@@ -74,6 +74,10 @@
 			border-color var(--duration-base) var(--ease-out);
 	}
 
+	a[data-action] {
+		color: var(--on-fill);
+	}
+
 	:where(button, a[data-action]):hover:not(:disabled) {
 		background-color: color-mix(in oklab, var(--fill), var(--text) var(--shift-hover));
 		text-decoration: none;
@@ -139,6 +143,17 @@
 		color: var(--danger);
 	}
 
+	.copy-field > div {
+		display: flex;
+		gap: var(--space-xs);
+
+		& input {
+			flex: 1;
+			min-inline-size: 0;
+			font-family: var(--font-mono);
+		}
+	}
+
 	.choices {
 		display: flex;
 		flex-wrap: wrap;
@@ -172,9 +187,5 @@
 
 	.compose-form {
 		max-inline-size: var(--measure);
-	}
-
-	.login-form {
-		inline-size: min(100%, var(--form-min));
 	}
 }
