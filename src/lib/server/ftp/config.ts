@@ -29,15 +29,21 @@ const HOST = /^[A-Za-z0-9.\-:[\]]+$/;
 
 /**
  * The app's own secrets may not be used as the FTP password variable — otherwise saving the form
- * would send e.g. TOKEN_ENC_KEY to whatever server is configured.
+ * would send e.g. SOCIAL_SANITY_TOKEN_ENC_KEY to whatever server is configured.
  */
-const RESERVED_ENV_VARS = new Set([...Object.keys(variables), 'ANTHROPIC_API_KEY']);
+export const APP_ENV_VARS = new Set(Object.keys(variables));
+const RESERVED_ENV_VARS = new Set([...APP_ENV_VARS, 'ANTHROPIC_API_KEY']);
 
-export function validateEnvVarName(name: string): string | undefined {
-	if (!name) return 'Enter the name of the environment variable that holds the password.';
+/** `reserved` names variables that must not be used, e.g. the app's own secrets. */
+export function validateEnvVarName(
+	name: string,
+	reserved: Set<string> = RESERVED_ENV_VARS,
+	what = 'the password'
+): string | undefined {
+	if (!name) return `Enter the name of the environment variable that holds ${what}.`;
 	if (!ENV_VAR_NAME.test(name))
-		return 'Use upper-case letters, digits and underscores, starting with a letter (e.g. FTP_PASSWORD).';
-	if (RESERVED_ENV_VARS.has(name))
+		return 'Use upper-case letters, digits and underscores, starting with a letter (e.g. SOCIAL_SANITY_FTP_PWD).';
+	if (reserved.has(name))
 		return `${name} is used by Social Sanity itself; choose another variable.`;
 	return undefined;
 }

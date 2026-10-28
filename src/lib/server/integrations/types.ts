@@ -1,4 +1,4 @@
-export type PlatformId = 'linkedin' | 'instagram';
+export type IntegrationId = 'linkedin' | 'instagram' | 'google' | 'youtube' | 'reddit';
 
 export type OAuthClientConfig = {
 	clientId: string;
@@ -30,13 +30,18 @@ export type AppSetup = {
 };
 
 export interface Integration {
-	id: PlatformId;
+	id: IntegrationId;
 	name: string;
 	/** Developer console where the OAuth app (and its redirect URI) is registered. */
 	consoleUrl: string;
 	setup: AppSetup;
 	/** Short note shown on the integrations page, e.g. account-type requirements. */
 	note?: string;
+	/**
+	 * Integrations of the same family can share one developer app (OAuth client), e.g. every Google
+	 * service. `api` names what to turn on in that app for this integration.
+	 */
+	family?: { id: 'google'; api: string };
 	/** Origin of the OAuth consent page; the only external origin we redirect to. */
 	authorizeOrigin: string;
 	authorizeUrl(state: string, redirectUri: string): string;

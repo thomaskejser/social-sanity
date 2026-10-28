@@ -3,16 +3,24 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import SiteFooter from '#lib/components/SiteFooter.svelte';
-	import SiteHeader, { type NavItem } from '#lib/components/SiteHeader.svelte';
+	import SideNav, { type NavItem } from '#lib/components/SideNav.svelte';
 
 	let { children } = $props();
 
 	const navItems: NavItem[] = [
-		{ href: resolve('/'), label: 'Home', match: '/' },
-		{ href: resolve('/posts'), label: 'Posts', match: '/posts' },
-		{ href: resolve('/integrations'), label: 'Integrations', match: '/integrations' },
-		{ href: resolve('/settings'), label: 'Settings', match: '/settings' }
+		{ href: resolve('/tasks'), label: 'Tasks', icon: 'tasks', match: '/tasks' },
+		{ href: resolve('/consume'), label: 'Consume', icon: 'consume', match: '/consume' },
+		{ href: resolve('/humans'), label: 'Humans', icon: 'humans', match: '/humans' },
+		{ href: resolve('/companies'), label: 'Companies', icon: 'company', match: '/companies' },
+		{ href: resolve('/channels'), label: 'Channels', icon: 'channel', match: '/channels' },
+		{ href: resolve('/contribute'), label: 'Contribute', icon: 'contribute', match: '/contribute' },
+		{
+			href: resolve('/integrations'),
+			label: 'Integrations',
+			icon: 'integrations',
+			match: '/integrations'
+		},
+		{ href: resolve('/settings'), label: 'Settings', icon: 'settings', match: '/settings' }
 	];
 </script>
 
@@ -21,10 +29,8 @@
 	<title>Social Sanity</title>
 </svelte:head>
 
-<SiteHeader items={navItems} currentPath={page.url.pathname} />
+<SideNav items={navItems} currentPath={page.url.pathname} />
 
 <main>
 	{@render children()}
 </main>
-
-<SiteFooter />

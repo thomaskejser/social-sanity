@@ -32,6 +32,55 @@
 	}
 
 	tbody tr:nth-child(even) {
-		background-color: var(--surface-raised);
+		background-color: var(--zebra);
+	}
+
+	tbody tr:hover {
+		background-color: var(--surface-hover);
+	}
+
+	.paginated-table > footer {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs) var(--space-md);
+		padding-block-start: var(--space-xs);
+		color: var(--text-muted);
+		font-size: var(--size-sm);
+	}
+
+	.channel-cell {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-xs);
+		overflow-wrap: anywhere;
+
+		& img {
+			flex: none;
+			border-radius: var(--radius-round);
+		}
+
+		& small {
+			display: block;
+			color: var(--text-muted);
+		}
+	}
+
+	.job-cell {
+		overflow-wrap: anywhere;
+
+		& small {
+			display: block;
+			color: var(--text-muted);
+
+			&[data-tone='danger'] {
+				color: var(--danger);
+			}
+		}
+	}
+
+	td :is(select, input[type='text']) {
+		min-inline-size: var(--field-min);
 	}
 }

@@ -1,32 +1,40 @@
-import { eq } from 'drizzle-orm';
-import { TOKEN_ENC_KEY } from '$app/env/private';
+import { SOCIAL_SANITY_TOKEN_ENC_KEY } from '$app/env/private';
 import { decryptSecret, encryptSecret } from '../crypto.ts';
 import { db } from '../db/index.ts';
-import { oauthClients } from '../db/schema.ts';
-import type { OAuthClientConfig, PlatformId } from './types.ts';
+import type { OAuthClientConfig, IntegrationId } from './types.ts';
+import getSql from './sql/get-oauth-client.sql?raw';
+import saveSql from './sql/save-oauth-client.sql?raw';
+import deleteSql from './sql/delete-oauth-client.sql?raw';
 
-export function getOAuthClient(platform: PlatformId): OAuthClientConfig | undefined {
-	const row = db.select().from(oauthClients).where(eq(oauthClients.platform, platform)).get();
+const getStatement = db.prepare<
+	[{ platform: string }],
+	{ clientId: string; clientSecretEnc: string }
+>(getSql);
+const saveStatement = db.prepare(saveSql);
+const deleteStatement = db.prepare(deleteSql);
+
+export function getOAuthClient(platform: IntegrationId): OAuthClientConfig | undefined {
+	const row = getStatement.get({ platform });
 	if (!row) return undefined;
 	return {
 		clientId: row.clientId,
-		clientSecret: decryptSecret(row.clientSecretEnc, TOKEN_ENC_KEY)
+		clientSecret: decryptSecret(row.clientSecretEnc, SOCIAL_SANITY_TOKEN_ENC_KEY)
 	};
 }
 
-export function saveOAuthClient(platform: PlatformId, config: OAuthClientConfig, now = Date.now()) {
-	const row = {
+export function saveOAuthClient(
+	platform: IntegrationId,
+	config: OAuthClientConfig,
+	now = Date.now()
+) {
+	saveStatement.run({
 		platform,
-		clientId: config.clientId,
-		clientSecretEnc: encryptSecret(config.clientSecret, TOKEN_ENC_KEY),
-		updatedAt: now
-	};
-	db.insert(oauthClients)
-		.values(row)
-		.onConflictDoUpdate({ target: oauthClients.platform, set: row })
-		.run();
+		client_id: config.clientId,
+		client_secret_enc: encryptSecret(config.clientSecret, SOCIAL_SANITY_TOKEN_ENC_KEY),
+		updated_at: now
+	});
 }
 
-export function deleteOAuthClient(platform: PlatformId) {
-	db.delete(oauthClients).where(eq(oauthClients.platform, platform)).run();
+export function deleteOAuthClient(platform: IntegrationId) {
+	deleteStatement.run({ platform });
 }

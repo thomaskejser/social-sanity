@@ -6,8 +6,8 @@ import { getIntegration } from '#lib/server/integrations/registry.ts';
 import { IntegrationError } from '#lib/server/integrations/types.ts';
 import type { RequestHandler } from './$types';
 
-function backToIntegrations(params: Record<string, string>): never {
-	redirect(303, `/integrations?${new URLSearchParams(params)}`);
+function backTo(platform: string, params: Record<string, string>): never {
+	redirect(303, `/integrations/${platform}?${new URLSearchParams(params)}`);
 }
 
 export const GET: RequestHandler = async ({ params, cookies, url }) => {
@@ -19,16 +19,17 @@ export const GET: RequestHandler = async ({ params, cookies, url }) => {
 	cookies.delete(OAUTH_STATE_COOKIE, { path: '/integrations' });
 
 	const denied = url.searchParams.get('error_description') ?? url.searchParams.get('error');
-	if (denied) backToIntegrations({ error: `${integration.name}: ${denied}` });
+	if (denied) backTo(integration.id, { error: `${integration.name}: ${denied}` });
 
 	if (!isValidOAuthState(integration.id, url.searchParams.get('state'), storedState)) {
-		backToIntegrations({
+		backTo(integration.id, {
 			error: `${integration.name}: sign-in expired or was tampered with. Try again.`
 		});
 	}
 
 	const code = url.searchParams.get('code');
-	if (!code) backToIntegrations({ error: `${integration.name}: no authorisation code returned.` });
+	if (!code)
+		backTo(integration.id, { error: `${integration.name}: no authorisation code returned.` });
 
 	try {
 		const identity = await integration.exchangeCode(
@@ -40,8 +41,8 @@ export const GET: RequestHandler = async ({ params, cookies, url }) => {
 		console.error(err);
 		const message =
 			err instanceof IntegrationError ? err.message : 'unexpected error while connecting';
-		backToIntegrations({ error: `${integration.name}: ${message}` });
+		backTo(integration.id, { error: `${integration.name}: ${message}` });
 	}
 
-	backToIntegrations({ connected: integration.id });
+	backTo(integration.id, { connected: '1' });
 };

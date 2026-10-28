@@ -97,7 +97,7 @@
 			label="HTTPS token environment variable (optional)"
 			name="tokenEnvVar"
 			value={values.tokenEnvVar}
-			placeholder="POSTS_REPO_TOKEN"
+			placeholder="SOCIAL_SANITY_REPO_TOKEN"
 			hint="Leave empty for SSH or public repositories."
 			error={errors.tokenEnvVar}
 		/>

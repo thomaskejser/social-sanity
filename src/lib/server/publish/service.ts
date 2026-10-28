@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { PUBLIC_BASE_URL } from '$app/env/private';
+import { SOCIAL_SANITY_PUBLIC_BASE_URL } from '$app/env/private';
 import { hasErrors, platformFormat, type DraftMedia, type PlatformId } from '#lib/format/index.ts';
 import { mediaUrl } from '#lib/media.ts';
-import type { Account, GitRepo, PublishAttempt } from '../db/schema.ts';
+import type { Account, GitRepo, PublishAttempt } from '../db/types.ts';
 import { getFtpServer } from '../ftp/store.ts';
 import { uploadToFileServer } from '../ftp/transfer.ts';
 import { getAccessToken, listAccounts } from '../integrations/accounts.ts';
@@ -75,17 +75,17 @@ async function publicMediaUrl(item: PostMediaFile): Promise<string> {
 		);
 		if (publicUrl) return publicUrl;
 	}
-	if (!PUBLIC_BASE_URL) {
+	if (!SOCIAL_SANITY_PUBLIC_BASE_URL) {
 		throw new PublishError(
-			"Instagram fetches media from a public URL. Set PUBLIC_BASE_URL to this app's public address, or give the file upload integration a public URL."
+			"Instagram fetches media from a public URL. Set SOCIAL_SANITY_PUBLIC_BASE_URL to this app's public address, or give the file upload integration a public URL."
 		);
 	}
-	if (/^https?:\/\/(localhost|127\.|\[::1\])/.test(PUBLIC_BASE_URL)) {
+	if (/^https?:\/\/(localhost|127\.|\[::1\])/.test(SOCIAL_SANITY_PUBLIC_BASE_URL)) {
 		throw new PublishError(
-			`PUBLIC_BASE_URL is ${PUBLIC_BASE_URL}, which Instagram can't reach. Use a public address or the file upload integration.`
+			`SOCIAL_SANITY_PUBLIC_BASE_URL is ${SOCIAL_SANITY_PUBLIC_BASE_URL}, which Instagram can't reach. Use a public address or the file upload integration.`
 		);
 	}
-	return `${PUBLIC_BASE_URL}${mediaUrl(item.postsPath)}`;
+	return `${SOCIAL_SANITY_PUBLIC_BASE_URL}${mediaUrl(item.postsPath)}`;
 }
 
 function toPublishMedia(item: PostMediaFile): PublishMedia {

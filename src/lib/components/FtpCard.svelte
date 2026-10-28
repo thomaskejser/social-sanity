@@ -53,7 +53,7 @@
 			host: server?.host ?? '',
 			port: server ? String(server.port) : '',
 			username: server?.username ?? '',
-			passwordEnvVar: server?.passwordEnvVar ?? 'FTP_PASSWORD',
+			passwordEnvVar: server?.passwordEnvVar ?? 'SOCIAL_SANITY_FTP_PWD',
 			encryption: server?.encryption ?? 'explicit',
 			remoteDir: server?.remoteDir ?? '/',
 			publicUrl: server?.publicUrl ?? ''
@@ -133,9 +133,9 @@
 			label="Password environment variable"
 			name="passwordEnvVar"
 			value={values.passwordEnvVar}
-			placeholder="FTP_PASSWORD"
+			placeholder="SOCIAL_SANITY_FTP_PWD"
 			required
-			hint="Name of the variable holding the password, e.g. FTP_PASSWORD."
+			hint="Name of the variable holding the password, e.g. SOCIAL_SANITY_FTP_PWD."
 			error={errors.passwordEnvVar}
 		/>
 		{#if !isSftp}

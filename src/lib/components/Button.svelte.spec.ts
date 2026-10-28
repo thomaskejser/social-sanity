@@ -20,4 +20,23 @@ describe('Button', () => {
 		await page.getByRole('button', { name: 'Go' }).click();
 		expect(onclick).toHaveBeenCalledOnce();
 	});
+
+	it('shows the busy label and is disabled while busy', async () => {
+		render(Button, { busy: true, busyLabel: 'Saving…', children: label('Save') });
+		const button = page.getByRole('button', { name: 'Saving…' });
+		await expect.element(button).toBeDisabled();
+		await expect.element(button).toHaveAttribute('aria-busy', 'true');
+	});
+
+	it('keeps its text when busy without a busy label', async () => {
+		render(Button, { busy: true, children: label('Save') });
+		await expect.element(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+	});
+
+	it('is enabled and not busy by default, even with a busy label', async () => {
+		render(Button, { busyLabel: 'Saving…', children: label('Save') });
+		const button = page.getByRole('button', { name: 'Save' });
+		await expect.element(button).toBeEnabled();
+		await expect.element(button).not.toHaveAttribute('aria-busy');
+	});
 });

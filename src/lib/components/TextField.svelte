@@ -12,7 +12,7 @@
 	}: {
 		label: string;
 		name: string;
-		type?: 'text' | 'password' | 'email' | 'url' | 'search' | 'number' | 'datetime-local';
+		type?: 'text' | 'password' | 'email' | 'url' | 'search' | 'number' | 'date' | 'datetime-local';
 		value?: string;
 		hint?: string;
 		error?: string;

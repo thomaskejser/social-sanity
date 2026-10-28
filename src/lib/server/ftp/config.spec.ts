@@ -12,7 +12,7 @@ const valid = {
 	host: 'ftp.example.com',
 	port: '',
 	username: 'uploader',
-	passwordEnvVar: 'FTP_PASSWORD',
+	passwordEnvVar: 'SOCIAL_SANITY_FTP_PWD',
 	encryption: 'explicit',
 	remoteDir: '',
 	publicUrl: 'https://media.example.com/uploads/'
@@ -27,7 +27,7 @@ describe('parseFtpForm', () => {
 				host: 'ftp.example.com',
 				port: 21,
 				username: 'uploader',
-				passwordEnvVar: 'FTP_PASSWORD',
+				passwordEnvVar: 'SOCIAL_SANITY_FTP_PWD',
 				encryption: 'explicit',
 				remoteDir: '/',
 				publicUrl: 'https://media.example.com/uploads'
@@ -80,7 +80,7 @@ describe('parseFtpForm', () => {
 
 describe('validateEnvVarName', () => {
 	it('accepts conventional names', () => {
-		expect(validateEnvVarName('FTP_PASSWORD')).toBeUndefined();
+		expect(validateEnvVarName('SOCIAL_SANITY_FTP_PWD')).toBeUndefined();
 		expect(validateEnvVarName('NAS_FTP_PW2')).toBeUndefined();
 	});
 
@@ -92,7 +92,11 @@ describe('validateEnvVarName', () => {
 	});
 
 	it("refuses the app's own secrets", () => {
-		for (const name of ['TOKEN_ENC_KEY', 'PUBLIC_BASE_URL', 'ANTHROPIC_API_KEY']) {
+		for (const name of [
+			'SOCIAL_SANITY_TOKEN_ENC_KEY',
+			'SOCIAL_SANITY_PUBLIC_BASE_URL',
+			'ANTHROPIC_API_KEY'
+		]) {
 			expect(validateEnvVarName(name)).toMatch(/used by Social Sanity/);
 		}
 	});
@@ -100,15 +104,19 @@ describe('validateEnvVarName', () => {
 
 describe('readPassword', () => {
 	it('reads the named variable', () => {
-		expect(readPassword('FTP_PASSWORD', { FTP_PASSWORD: 's3cret' })).toBe('s3cret');
+		expect(readPassword('SOCIAL_SANITY_FTP_PWD', { SOCIAL_SANITY_FTP_PWD: 's3cret' })).toBe(
+			's3cret'
+		);
 	});
 
 	it('treats missing or empty as unset', () => {
-		expect(readPassword('FTP_PASSWORD', {})).toBeUndefined();
-		expect(readPassword('FTP_PASSWORD', { FTP_PASSWORD: '' })).toBeUndefined();
+		expect(readPassword('SOCIAL_SANITY_FTP_PWD', {})).toBeUndefined();
+		expect(readPassword('SOCIAL_SANITY_FTP_PWD', { SOCIAL_SANITY_FTP_PWD: '' })).toBeUndefined();
 	});
 
 	it('never reads reserved variables', () => {
-		expect(readPassword('TOKEN_ENC_KEY', { TOKEN_ENC_KEY: 'x'.repeat(44) })).toBeUndefined();
+		expect(
+			readPassword('SOCIAL_SANITY_TOKEN_ENC_KEY', { SOCIAL_SANITY_TOKEN_ENC_KEY: 'x'.repeat(44) })
+		).toBeUndefined();
 	});
 });

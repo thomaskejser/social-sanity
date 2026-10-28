@@ -79,29 +79,13 @@
 	}
 
 	:where(button, a[data-action]):hover:not(:disabled) {
-		background-color: color-mix(in oklab, var(--fill), var(--text) var(--shift-hover));
+		background-color: var(--surface-hover);
 		text-decoration: none;
 	}
 
 	button:disabled {
 		opacity: var(--disabled-opacity);
 		cursor: not-allowed;
-	}
-
-	[data-action='primary'] {
-		--fill: var(--accent);
-		--on-fill: var(--on-accent);
-		--edge: var(--accent);
-	}
-
-	[data-action='destructive'] {
-		--fill: var(--danger);
-		--on-fill: var(--on-danger);
-		--edge: var(--danger);
-	}
-
-	[data-action='secondary']:hover:not(:disabled) {
-		background-color: var(--surface-hover);
 	}
 
 	[data-action='inline'] {
@@ -112,6 +96,19 @@
 		font-weight: inherit;
 		text-decoration: underline;
 		text-underline-offset: var(--underline-offset);
+	}
+
+	[data-action='icon'] {
+		--edge: transparent;
+		--icon-size: 1.1em;
+		min-block-size: var(--icon-button);
+		min-inline-size: var(--icon-button);
+		padding: 0;
+		color: var(--text-muted);
+	}
+
+	[data-action='icon']:hover:not(:disabled) {
+		color: var(--text);
 	}
 
 	[data-action='inline']:hover:not(:disabled) {
@@ -174,6 +171,20 @@
 		& .choice-description {
 			grid-column: 2;
 		}
+
+		& label:has(.choice-picture) {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-sm);
+		}
+	}
+
+	.choice-picture {
+		inline-size: var(--portrait-size);
+		block-size: var(--portrait-size);
+		flex: none;
+		border-radius: var(--radius-md);
+		object-fit: cover;
 	}
 
 	.settings-form {
@@ -187,5 +198,173 @@
 
 	.compose-form {
 		max-inline-size: var(--measure);
+	}
+
+	.kudos-form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0;
+
+		& button {
+			--icon-size: calc(var(--kudos-size) * 0.7);
+			min-block-size: var(--kudos-size);
+			inline-size: var(--kudos-size);
+			padding: 0;
+			border: none;
+			color: var(--text-muted);
+		}
+
+		& button[aria-pressed='true'] {
+			color: var(--kudos-on);
+
+			& path {
+				fill: currentColor;
+			}
+		}
+
+		& button:hover:not(:disabled) {
+			background-color: var(--surface-hover);
+			color: var(--kudos-on);
+		}
+
+		& output {
+			margin-inline-start: var(--space-xs);
+			color: var(--text-muted);
+			font-size: var(--size-sm);
+		}
+	}
+
+	.task-card {
+		display: grid;
+		justify-items: start;
+		gap: var(--space-3xs);
+		inline-size: 100%;
+		padding: var(--space-xs) var(--space-sm);
+		border-color: var(--border);
+		background-color: var(--surface);
+		font-weight: var(--weight-normal);
+		text-align: start;
+		cursor: grab;
+
+		& small {
+			color: var(--text-muted);
+		}
+
+		& small[data-tone='danger'] {
+			color: var(--danger);
+			font-weight: var(--weight-bold);
+		}
+	}
+
+	.detail-form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: start;
+
+		& > .field {
+			flex: 1 1 var(--field-min);
+		}
+
+		& > footer {
+			flex-basis: 100%;
+		}
+	}
+
+	:is(li, footer) > form:not(.kudos-form) {
+		display: inline-flex;
+	}
+
+	.inline-form {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		max-inline-size: var(--feed-width);
+
+		& > .field {
+			flex: 1 1 var(--card-min);
+		}
+	}
+
+	.date-field-control {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-xs);
+
+		& > button:first-child {
+			--fill: var(--surface);
+			--edge: var(--border-strong);
+			justify-content: flex-start;
+			min-inline-size: min(var(--field-min) * 1.5, 100%);
+			padding-inline: var(--space-sm);
+			font-weight: var(--weight-normal);
+		}
+	}
+
+	.calendar {
+		display: grid;
+		gap: var(--space-xs);
+		inline-size: max-content;
+		max-inline-size: 100%;
+		padding: var(--space-sm);
+		border: var(--border-width) solid var(--border);
+		border-radius: var(--radius-md);
+		background-color: var(--surface-raised);
+
+		& > header {
+			display: flex;
+			align-items: center;
+			gap: var(--space-2xs);
+
+			& select {
+				inline-size: auto;
+			}
+
+			& input {
+				inline-size: 6ch;
+				padding-inline: var(--space-2xs);
+			}
+		}
+
+		& table {
+			inline-size: auto;
+		}
+
+		& :is(th, td) {
+			padding: 0;
+			border: none;
+			text-align: center;
+		}
+
+		& tbody tr:nth-child(even),
+		& tbody tr:hover {
+			background-color: transparent;
+		}
+
+		& td button {
+			min-block-size: var(--icon-button);
+			min-inline-size: var(--icon-button);
+			padding: 0;
+			border-color: transparent;
+			font-weight: var(--weight-normal);
+		}
+
+		& td button[aria-pressed='true'] {
+			--fill: var(--accent);
+			--on-fill: var(--on-accent);
+			font-weight: var(--weight-bold);
+		}
+	}
+
+	.findings-form fieldset {
+		border-color: color-mix(in oklab, var(--accent) var(--tint-strong), var(--border));
+		background-color: color-mix(in oklab, var(--accent) var(--tint-weak), var(--surface));
+	}
+
+	.dialog-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs);
 	}
 }

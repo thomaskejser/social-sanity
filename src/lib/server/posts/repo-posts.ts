@@ -13,7 +13,7 @@ import {
 	type PostFile,
 	type PublishedState
 } from '#lib/posts/markdown.ts';
-import type { GitRepo } from '../db/schema.ts';
+import type { GitRepo } from '../db/types.ts';
 import { commitAndPush, ensureClone, sync, withRepoLock } from '../repo/git.ts';
 import { cloneDir, gitContext, postsRoot } from '../repo/store.ts';
 

@@ -1,26 +1,35 @@
-import { eq } from 'drizzle-orm';
-import { db } from '../db/index.ts';
-import { ftpServer, type FtpServer } from '../db/schema.ts';
+import { db, flag, fromFlag } from '../db/index.ts';
+import type { FtpServer } from '../db/types.ts';
 import type { FtpConfig } from './config.ts';
+import getSql from './sql/get-ftp-server.sql?raw';
+import saveSql from './sql/save-ftp-server.sql?raw';
+import recordTestSql from './sql/record-ftp-test.sql?raw';
+import deleteSql from './sql/delete-ftp-server.sql?raw';
 
-const ROW_ID = 1;
+const getStatement = db.prepare<[], Omit<FtpServer, 'lastTestOk'> & { lastTestOk: number | null }>(
+	getSql
+);
+const saveStatement = db.prepare(saveSql);
+const recordTestStatement = db.prepare(recordTestSql);
+const deleteStatement = db.prepare(deleteSql);
 
 export function getFtpServer(): FtpServer | undefined {
-	return db.select().from(ftpServer).where(eq(ftpServer.id, ROW_ID)).get();
+	const row = getStatement.get();
+	return row && { ...row, lastTestOk: fromFlag(row.lastTestOk) };
 }
 
 export function saveFtpServer(config: FtpConfig, now = Date.now()) {
-	// Changing the settings invalidates the previous connection test and the pinned SFTP host key.
-	const row = {
-		...config,
-		id: ROW_ID,
-		updatedAt: now,
-		lastTestedAt: null,
-		lastTestOk: null,
-		lastTestMessage: null,
-		hostKeyFingerprint: null
-	};
-	db.insert(ftpServer).values(row).onConflictDoUpdate({ target: ftpServer.id, set: row }).run();
+	saveStatement.run({
+		protocol: config.protocol,
+		host: config.host,
+		port: config.port,
+		username: config.username,
+		password_env_var: config.passwordEnvVar,
+		encryption: config.encryption,
+		remote_dir: config.remoteDir,
+		public_url: config.publicUrl,
+		updated_at: now
+	});
 }
 
 export function recordFtpTest(
@@ -29,18 +38,14 @@ export function recordFtpTest(
 	hostKeyFingerprint?: string | null,
 	now = Date.now()
 ) {
-	db.update(ftpServer)
-		.set({
-			lastTestedAt: now,
-			lastTestOk: ok,
-			lastTestMessage: message,
-			// Pin the SFTP host key on the first successful test; never overwrite an existing pin here.
-			...(ok && hostKeyFingerprint ? { hostKeyFingerprint } : {})
-		})
-		.where(eq(ftpServer.id, ROW_ID))
-		.run();
+	recordTestStatement.run({
+		tested_at: now,
+		ok: flag(ok),
+		message,
+		host_key_fingerprint: hostKeyFingerprint ?? null
+	});
 }
 
 export function deleteFtpServer() {
-	db.delete(ftpServer).where(eq(ftpServer.id, ROW_ID)).run();
+	deleteStatement.run();
 }

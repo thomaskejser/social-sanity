@@ -1,102 +1,51 @@
 # Social Sanity
 
-Single-user app, run locally on your own machine, to **publish** to LinkedIn and Instagram (reformatted per platform) and to
-**filter** what you see on those platforms via a Firefox extension that hides unwanted posts.
+Single-user app, run locally on your own machine, that shields you from the algorithms of social media.
+It keeps track of the humans you care about, plans your tasks, reads your non-algorithmic feed, and publishes to LinkedIn and Instagram without opening them.
 
-Built with SvelteKit (Svelte 5, TypeScript) on Node via `@sveltejs/adapter-node`, SQLite via Drizzle.
+Built with SvelteKit (Svelte 5, TypeScript) on Node via `@sveltejs/adapter-node`, and SQLite through better-sqlite3 with plain SQL.
 
 ## Setup
 
 ```sh
 npm install
-cp .env.example .env
-openssl rand -base64 32                    # TOKEN_ENC_KEY
-npm run db:push                            # create/update the SQLite schema (needs DATABASE_URL in env)
 npm run dev
 ```
 
-## Connecting social accounts
+- Settings come from environment variables named `SOCIAL_SANITY_*`; `.env.example` lists them.
+- Keep the values in `~/.zshenv`, e.g. `export SOCIAL_SANITY_TOKEN_ENC_KEY='…'`.
+  - A git-ignored `.env` in the project also works; a value set in the shell wins.
+  - Restart the dev server after changing one.
+- `SOCIAL_SANITY_DATABASE_URL` and `SOCIAL_SANITY_TOKEN_ENC_KEY` are required.
+  Generate the key with `openssl rand -base64 32`.
+- The app creates its SQLite tables on start from `src/lib/server/db/schema.sql`.
 
-- Accounts are connected with OAuth on the **Integrations** page.
-  - You sign in on the platform's own page; Social Sanity keeps only an encrypted access token.
-- Both platforms only let registered apps sign in on a user's behalf, so each needs a developer app of your own, created once.
-  - The Integrations card links to the platform's app creation page, lists the steps and shows the redirect URL to register.
-  - Paste the app's client ID and secret into the card; the secret is stored encrypted with `TOKEN_ENC_KEY`.
-  - "Change app" forgets the credentials so another app can be entered.
-- **LinkedIn** needs the _Share on LinkedIn_ and _Sign In with LinkedIn using OpenID Connect_ products.
-  Tokens last 60 days; reconnect when the page warns you.
-- **Instagram** uses _Instagram API with Instagram Login_ with your Professional account added as a tester.
-  The redirect URI must be HTTPS, so set `PUBLIC_BASE_URL` to a tunnel or real host.
-  Tokens are refreshed automatically.
+## Design
 
-### FTP / SFTP upload
+- What the app does is described in [DESIGN.md](./DESIGN.md) and the documents it links to.
+- Each functionality is a tab in the left-hand navigation:
 
-The Integrations page can also hold an FTP or SFTP server for uploading files (e.g. media that
-Instagram must fetch from a public URL). Pick the protocol, then enter host, port, username,
-encryption (FTP only; FTPS recommended), remote directory and optionally the public URL of that
-directory. For SFTP the server's host key is pinned on the first successful test; if it later
-changes the connection is refused until you save the settings again. The password is **never stored**: put
-it in an environment variable and enter that variable's name (e.g. `FTP_PASSWORD`). "Test
-connection" logs in and writes/deletes a probe file.
+  | Tab          | Route           | Design                                           |
+  | ------------ | --------------- | ------------------------------------------------ |
+  | Consume      | `/consume`      | [DESIGN_CONSUME.md](./DESIGN_CONSUME.md)         |
+  | Humans       | `/humans`       | [DESIGN_HUMANS.md](./DESIGN_HUMANS.md)           |
+  | Tasks        | `/tasks`        | [DESIGN_TASKS.md](./DESIGN_TASKS.md)             |
+  | Contribute   | `/contribute`   | [DESIGN_CONTRIBUTE.md](./DESIGN_CONTRIBUTE.md)   |
+  | Integrations | `/integrations` | [DESIGN_INTEGRATION.md](./DESIGN_INTEGRATION.md) |
+  | Settings     | `/settings`     | Credits and trademarks                           |
 
-## Posts repository
+- Each integration has its own page, e.g. `/integrations/linkedin` or `/integrations/blog-site`.
+- Content sources are read every 30 minutes, and on "Refresh now" on the Consume page.
+  - A source URI that is itself an RSS or Atom feed is read directly; otherwise the feed its page advertises is used.
+  - Articles whose feed carries the full text, and YouTube videos, open in the app in a sandboxed frame with scripts blocked.
+  - Other articles link to their site, marked as leaving Social Sanity.
 
-- Posts live as Markdown files in a git repository, added on the **Settings** page.
-- The app keeps its own clone (`REPO_DIR`, default `data/repo`).
-  - It pulls every 5 minutes, and on "Pull now" on the Posts page.
-  - Every change it makes is committed with the configured author and pushed straight away.
-  - A push that fails stays committed locally and goes out with the next pull.
-- Access:
-  - SSH URLs (`git@host:org/repo.git`) use this machine's SSH keys; a new host key is accepted on first use.
-  - HTTPS URLs can use a token from an environment variable whose name you enter; the token is never stored.
-  - Only `https://`, `ssh://` and `git@host:path` URLs are accepted (plain `http://` only to this machine).
+## Backups
 
-### File layout
-
-- Each `.md` file under the posts folder is a post; `README.md` files are ignored.
-- Posts written in the app get a folder `YYYY-MM-DD-slug/` with `index.md` and the uploaded media.
-- The body is the post text, written in Markdown.
-  - Markdown is turned into plain text for the platforms: emphasis is removed, `[label](url)` becomes `label url`, and list items get bullets.
-  - HTML comments (`<!-- … -->`) are dropped, so they can hold private notes.
-  - Images and videos are referenced with `![alt](file.jpg)`, relative to the Markdown file and inside the posts folder.
-- Front matter holds the title, the date and per-platform state:
-
-  ```yaml
-  ---
-  title: Autumn launch
-  date: 2026-10-01
-  platforms:
-    instagram:
-      text: |-
-        Autumn collection is live! Link in bio.
-        #autumn
-    linkedin:
-      url: https://www.linkedin.com/feed/update/urn:li:share:123/
-      id: urn:li:share:123
-      publishedAt: 2026-10-11T14:02:00.000Z
-  ---
-  ```
-
-  - `text` replaces the text generated from the body for that platform.
-  - `url`, `id` and `publishedAt` are written when a post is published; a platform with an `id` is never published again.
-
-## Posting
-
-- **Posts → New post** takes an optional title, the text and images or a video, and commits them as a new post.
-- The preview page shows a card per platform with that platform's version of the text and media.
-  - LinkedIn keeps the text as written (normalized whitespace).
-  - Instagram moves links to the end of the caption, because links in captions are not clickable.
-  - Each card's text can be edited; the preview, character count and checks update as you type.
-  - "Save changes" commits edited texts to the front matter; "Reset text" restores the generated version.
-- Publish to one platform from its card, or to every ready platform with "Publish to all".
-  - Publishing runs in the background and the page refreshes until it finishes.
-  - A platform is ready when it is connected and its checks show no errors.
-  - Successful publishes are committed to the front matter; failures are shown in the app only.
-- Instagram fetches media from a public URL.
-  - With a file upload server that has a public URL, media is uploaded there first.
-  - Otherwise it fetches `<PUBLIC_BASE_URL>/media/...`, which exposes the app at that address.
-- Instagram accepts only JPEG images; LinkedIn accepts JPEG, PNG and GIF, and MP4 video.
-- GitHub rejects files over 100 MB, so large videos may not push.
+- Settings → **Download database** saves a consistent copy of the SQLite database while the app runs.
+- Backup agents fetch the same copy with `GET /api/backup` and `Authorization: Bearer <SOCIAL_SANITY_BACKUP_TOKEN>`.
+  - The endpoint answers 404 while `SOCIAL_SANITY_BACKUP_TOKEN` is unset; the token must be at least 32 characters.
+- Tokens and client secrets in the copy stay encrypted with `SOCIAL_SANITY_TOKEN_ENC_KEY`, which is not in the file; keep the key to restore.
 
 ## Scripts
 
@@ -107,24 +56,26 @@ connection" logs in and writes/deletes a probe file.
 | `npm run check`                   | Type-check                                |
 | `npm run lint` / `npm run format` | Prettier + ESLint                         |
 | `npm test`                        | Unit (node) and component (browser) tests |
-| `npm run db:push` / `db:studio`   | Drizzle schema push / browser             |
 
 ## Running in production
 
 - There is no login: anyone who can reach the port can use the app and publish as you.
-  - Start the build with `HOST=127.0.0.1 node build` so it listens on this machine only.
-- Build and start with `npm run build && node build`.
+- Build with `npm run build`, then start with `node --env-file-if-exists=.env build`.
+  - adapter-node's own settings carry the prefix `SOCIAL_SANITY_SERVER_`: `SOCIAL_SANITY_SERVER_HOST`, `SOCIAL_SANITY_SERVER_PORT` and so on.
+    It rejects unknown variables with its prefix, so it cannot share `SOCIAL_SANITY_` with the app's own variables.
+  - Set `SOCIAL_SANITY_SERVER_HOST=127.0.0.1` so it listens on this machine only.
 - `@sveltejs/adapter-node` 6 assumes the public origin is **HTTPS** and does not read an `ORIGIN` variable.
-- Run it behind a TLS-terminating reverse proxy and set `PROTOCOL_HEADER=x-forwarded-proto`.
-  Also set `HOST_HEADER=x-forwarded-host` if the proxy rewrites the host.
+- Run it behind a TLS-terminating reverse proxy and set `SOCIAL_SANITY_SERVER_PROTOCOL_HEADER=x-forwarded-proto`.
+  Also set `SOCIAL_SANITY_SERVER_HOST_HEADER=x-forwarded-host` if the proxy rewrites the host.
 - Plain-HTTP access without those headers makes form posts fail with 403 (CSRF check).
-- Set `BODY_SIZE_LIMIT=300M` (or larger) so video uploads are accepted; the default is 512 KB.
+- Set `SOCIAL_SANITY_SERVER_BODY_SIZE_LIMIT=300M` (or larger) so video uploads are accepted; the default is 512 KB.
 
 ## Layout
 
 - `src/lib/components/` — every UI control is a component
 - `src/lib/styles/` — global stylesheets and design tokens (no per-component styles)
 - `src/lib/server/` — server-only code (db, crypto, integrations, publishing)
+  - Queries live in `.sql` files in each module's `sql/` folder, run with bound `$name` parameters.
 
 ## Credits
 

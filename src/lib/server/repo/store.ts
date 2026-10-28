@@ -1,13 +1,21 @@
 import path from 'node:path';
-import { eq } from 'drizzle-orm';
-import { REPO_DIR } from '$app/env/private';
-import { db } from '../db/index.ts';
-import { gitRepo, type GitRepo } from '../db/schema.ts';
+import { SOCIAL_SANITY_REPO_DIR } from '$app/env/private';
+import { db, flag, fromFlag } from '../db/index.ts';
+import type { GitRepo } from '../db/types.ts';
 import { readPassword } from '../ftp/config.ts';
 import type { RepoConfig } from './config.ts';
 import type { GitContext } from './git.ts';
+import getSql from './sql/get-git-repo.sql?raw';
+import saveSql from './sql/save-git-repo.sql?raw';
+import recordSyncSql from './sql/record-sync.sql?raw';
+import deleteSql from './sql/delete-git-repo.sql?raw';
 
-const ROW_ID = 1;
+const getStatement = db.prepare<[], Omit<GitRepo, 'lastSyncOk'> & { lastSyncOk: number | null }>(
+	getSql
+);
+const saveStatement = db.prepare(saveSql);
+const recordSyncStatement = db.prepare(recordSyncSql);
+const deleteStatement = db.prepare(deleteSql);
 
 export class RepoNotConfiguredError extends Error {
 	constructor() {
@@ -16,34 +24,33 @@ export class RepoNotConfiguredError extends Error {
 }
 
 export function getGitRepo(): GitRepo | undefined {
-	return db.select().from(gitRepo).where(eq(gitRepo.id, ROW_ID)).get();
+	const row = getStatement.get();
+	return row && { ...row, lastSyncOk: fromFlag(row.lastSyncOk) };
 }
 
 export function saveGitRepo(config: RepoConfig, now = Date.now()) {
-	const row = {
-		...config,
-		id: ROW_ID,
-		updatedAt: now,
-		lastSyncAt: null,
-		lastSyncOk: null,
-		lastSyncMessage: null
-	};
-	db.insert(gitRepo).values(row).onConflictDoUpdate({ target: gitRepo.id, set: row }).run();
+	saveStatement.run({
+		url: config.url,
+		branch: config.branch,
+		posts_dir: config.postsDir,
+		token_env_var: config.tokenEnvVar,
+		token_username: config.tokenUsername,
+		author_name: config.authorName,
+		author_email: config.authorEmail,
+		updated_at: now
+	});
 }
 
 export function recordSync(ok: boolean, message: string, now = Date.now()) {
-	db.update(gitRepo)
-		.set({ lastSyncAt: now, lastSyncOk: ok, lastSyncMessage: message })
-		.where(eq(gitRepo.id, ROW_ID))
-		.run();
+	recordSyncStatement.run({ synced_at: now, ok: flag(ok), message });
 }
 
 export function deleteGitRepo() {
-	db.delete(gitRepo).where(eq(gitRepo.id, ROW_ID)).run();
+	deleteStatement.run();
 }
 
 export function cloneDir(): string {
-	return path.resolve(REPO_DIR);
+	return path.resolve(SOCIAL_SANITY_REPO_DIR);
 }
 
 /** Absolute path of the posts folder inside the clone. */

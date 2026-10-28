@@ -1,7 +1,9 @@
 import { getOAuthClient } from './clients.ts';
+import { createGoogle, createYouTube } from './google.ts';
 import { createInstagram } from './instagram.ts';
 import { createLinkedIn } from './linkedin.ts';
-import type { Integration, OAuthClientConfig, PlatformId } from './types.ts';
+import { createReddit } from './reddit.ts';
+import type { Integration, OAuthClientConfig, IntegrationId } from './types.ts';
 
 export type IntegrationEntry = {
 	integration: Integration;
@@ -11,14 +13,17 @@ export type IntegrationEntry = {
 	clientId: string | null;
 };
 
-const factories: Record<PlatformId, (config: OAuthClientConfig) => Integration> = {
+const factories: Record<IntegrationId, (config: OAuthClientConfig) => Integration> = {
 	linkedin: createLinkedIn,
-	instagram: createInstagram
+	instagram: createInstagram,
+	google: createGoogle,
+	youtube: createYouTube,
+	reddit: createReddit
 };
 
 const unconfigured: OAuthClientConfig = { clientId: '', clientSecret: '' };
 
-function entry(id: PlatformId): IntegrationEntry {
+function entry(id: IntegrationId): IntegrationEntry {
 	const client = getOAuthClient(id);
 	return {
 		integration: factories[id](client ?? unconfigured),
@@ -28,13 +33,13 @@ function entry(id: PlatformId): IntegrationEntry {
 }
 
 export function listIntegrations(): IntegrationEntry[] {
-	return (Object.keys(factories) as PlatformId[]).map(entry);
+	return (Object.keys(factories) as IntegrationId[]).map(entry);
 }
 
 export function getIntegration(id: string): IntegrationEntry | undefined {
-	return Object.hasOwn(factories, id) ? entry(id as PlatformId) : undefined;
+	return Object.hasOwn(factories, id) ? entry(id as IntegrationId) : undefined;
 }
 
-export function isPlatformId(id: string): id is PlatformId {
+export function isIntegrationId(id: string): id is IntegrationId {
 	return Object.hasOwn(factories, id);
 }

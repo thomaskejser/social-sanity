@@ -24,6 +24,7 @@
 			color-mix(in oklab, #000 40%, var(--night))
 		);
 		--surface-hover: color-mix(in oklab, var(--text) 6%, transparent);
+		--zebra: color-mix(in oklab, var(--text) 5%, transparent);
 
 		--text: light-dark(var(--ink), color-mix(in oklab, var(--paper) 92%, var(--night)));
 		--text-muted: light-dark(
@@ -101,13 +102,32 @@
 		--ease-out: ease-out;
 
 		--measure: 65ch;
-		--page-width: 72rem;
+		--page-width: 120rem;
 		--page-gutter: clamp(var(--space-md), 4vw, var(--space-2xl));
 		--card-min: 18rem;
 		--media-height: 24rem;
 		--page-inset: max(var(--page-gutter), (100% - var(--page-width)) / 2);
 		--tap-target: 2.75rem;
+		--icon-button: 2rem;
 		--layer-sticky: 10;
+		--nav-icon-size: 1.5rem;
+		--chrome-top: var(--space-xl);
+		--title-line: calc(var(--size-2xl) * var(--leading-tight));
+		--nav-width: 11rem;
+		--aside-width: 18rem;
+		--feed-width: 72rem;
+		--kudos-size: 1.125rem;
+		--mark-size: 0.875em;
+		--avatar-size: 1.5em;
+		--portrait-size: 5rem;
+		--preview-width: 18rem;
+		--play-size: 2rem;
+		--kudos-on: var(--warn);
+		--pane-min: 12rem;
+		--field-min: 10rem;
+		--reader-height: 80vh;
+		--dialog-width: 36rem;
+		--backdrop: color-mix(in oklab, #000 45%, transparent);
 	}
 
 	:root[data-theme='light'] {

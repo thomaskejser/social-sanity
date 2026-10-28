@@ -11,7 +11,7 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter({ envPrefix: 'SOCIAL_SANITY_SERVER_' })
 		})
 	],
 	test: {

@@ -96,4 +96,47 @@
 	strong {
 		font-weight: var(--weight-bold);
 	}
+
+	.leave-link {
+		--icon-size: 1em;
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2xs);
+
+		& small {
+			color: var(--text-muted);
+		}
+	}
+
+	.member-link {
+		--icon-size: 1em;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2xs);
+	}
+
+	.member-avatar {
+		inline-size: var(--avatar-size);
+		block-size: var(--avatar-size);
+		flex: none;
+		border-radius: var(--radius-round);
+		object-fit: cover;
+	}
+
+	.presence-icons {
+		--icon-size: var(--mark-size);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-3xs);
+
+		& a:any-link {
+			display: inline-flex;
+			color: var(--text-muted);
+		}
+
+		& a:any-link:hover {
+			color: var(--text);
+		}
+	}
 }

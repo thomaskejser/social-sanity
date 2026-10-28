@@ -73,7 +73,11 @@ describe('parseRepoForm', () => {
 		);
 		expect(ssh.ok ? null : ssh.errors.tokenEnvVar).toMatch(/only used with https/);
 		const reserved = parseRepoForm(
-			form({ url: 'https://h/p.git', tokenEnvVar: 'TOKEN_ENC_KEY', authorEmail: 'me@x.io' })
+			form({
+				url: 'https://h/p.git',
+				tokenEnvVar: 'SOCIAL_SANITY_TOKEN_ENC_KEY',
+				authorEmail: 'me@x.io'
+			})
 		);
 		expect(reserved.ok ? null : reserved.errors.tokenEnvVar).toMatch(/used by Social Sanity/);
 	});

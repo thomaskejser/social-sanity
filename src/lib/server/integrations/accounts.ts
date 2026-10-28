@@ -1,51 +1,65 @@
-import { eq } from 'drizzle-orm';
-import { TOKEN_ENC_KEY } from '$app/env/private';
+import { SOCIAL_SANITY_TOKEN_ENC_KEY } from '$app/env/private';
 import { decryptSecret, encryptSecret } from '../crypto.ts';
 import { db } from '../db/index.ts';
-import { accounts, type Account } from '../db/schema.ts';
-import type { ConnectedIdentity, Integration, PlatformId, TokenGrant } from './types.ts';
+import type { Account } from '../db/types.ts';
+import type { ConnectedIdentity, Integration, IntegrationId, TokenGrant } from './types.ts';
+import listSql from './sql/list-accounts.sql?raw';
+import saveSql from './sql/save-account.sql?raw';
+import saveRefreshedSql from './sql/save-refreshed-token.sql?raw';
+import deleteSql from './sql/delete-account.sql?raw';
+
+const listStatement = db.prepare<[], Account>(listSql);
+const saveStatement = db.prepare(saveSql);
+const saveRefreshedStatement = db.prepare(saveRefreshedSql);
+const deleteStatement = db.prepare(deleteSql);
 
 export function listAccounts(): Account[] {
-	return db.select().from(accounts).all();
+	return listStatement.all();
 }
 
 export function getAccessToken(account: Account): string {
-	return decryptSecret(account.accessTokenEnc, TOKEN_ENC_KEY);
+	return decryptSecret(account.accessTokenEnc, SOCIAL_SANITY_TOKEN_ENC_KEY);
 }
 
-export function saveAccount(platform: PlatformId, identity: ConnectedIdentity, now = Date.now()) {
-	const row = {
+export function getRefreshToken(account: Account): string | undefined {
+	return account.refreshTokenEnc
+		? decryptSecret(account.refreshTokenEnc, SOCIAL_SANITY_TOKEN_ENC_KEY)
+		: undefined;
+}
+
+export function saveAccount(
+	platform: IntegrationId,
+	identity: ConnectedIdentity,
+	now = Date.now()
+) {
+	saveStatement.run({
 		platform,
-		externalId: identity.externalId,
-		displayName: identity.displayName,
-		accessTokenEnc: encryptSecret(identity.accessToken, TOKEN_ENC_KEY),
-		refreshTokenEnc: identity.refreshToken
-			? encryptSecret(identity.refreshToken, TOKEN_ENC_KEY)
+		external_id: identity.externalId,
+		display_name: identity.displayName,
+		access_token_enc: encryptSecret(identity.accessToken, SOCIAL_SANITY_TOKEN_ENC_KEY),
+		refresh_token_enc: identity.refreshToken
+			? encryptSecret(identity.refreshToken, SOCIAL_SANITY_TOKEN_ENC_KEY)
 			: null,
-		expiresAt: identity.expiresAt ?? null,
+		expires_at: identity.expiresAt ?? null,
 		scopes: identity.scopes.join(' '),
-		connectedAt: now,
-		refreshedAt: now
-	};
-	db.insert(accounts).values(row).onConflictDoUpdate({ target: accounts.platform, set: row }).run();
+		now
+	});
 }
 
 function saveRefreshedToken(account: Account, grant: TokenGrant, now = Date.now()) {
-	db.update(accounts)
-		.set({
-			accessTokenEnc: encryptSecret(grant.accessToken, TOKEN_ENC_KEY),
-			refreshTokenEnc: grant.refreshToken
-				? encryptSecret(grant.refreshToken, TOKEN_ENC_KEY)
-				: account.refreshTokenEnc,
-			expiresAt: grant.expiresAt ?? account.expiresAt,
-			refreshedAt: now
-		})
-		.where(eq(accounts.platform, account.platform))
-		.run();
+	saveRefreshedStatement.run({
+		platform: account.platform,
+		access_token_enc: encryptSecret(grant.accessToken, SOCIAL_SANITY_TOKEN_ENC_KEY),
+		refresh_token_enc: grant.refreshToken
+			? encryptSecret(grant.refreshToken, SOCIAL_SANITY_TOKEN_ENC_KEY)
+			: null,
+		expires_at: grant.expiresAt ?? null,
+		refreshed_at: now
+	});
 }
 
 export function deleteAccount(platform: string) {
-	db.delete(accounts).where(eq(accounts.platform, platform)).run();
+	deleteStatement.run({ platform });
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -65,7 +79,7 @@ export async function refreshExpiringTokens(
 			continue;
 		try {
 			const refreshToken = account.refreshTokenEnc
-				? decryptSecret(account.refreshTokenEnc, TOKEN_ENC_KEY)
+				? decryptSecret(account.refreshTokenEnc, SOCIAL_SANITY_TOKEN_ENC_KEY)
 				: undefined;
 			saveRefreshedToken(account, await integration.refresh(getAccessToken(account), refreshToken));
 			results.push({ platform: account.platform, ok: true });

@@ -1,57 +1,47 @@
-import { and, eq } from 'drizzle-orm';
 import type { PlatformId } from '#lib/format/index.ts';
 import { db } from '../db/index.ts';
-import { publishAttempts, type PublishAttempt } from '../db/schema.ts';
+import type { PublishAttempt } from '../db/types.ts';
+import listSql from './sql/list-attempts.sql?raw';
+import listUnrecordedSql from './sql/list-unrecorded.sql?raw';
+import startSql from './sql/start-attempt.sql?raw';
+import failSql from './sql/fail-attempt.sql?raw';
+import failInterruptedSql from './sql/fail-interrupted-attempts.sql?raw';
+import markUnrecordedSql from './sql/mark-unrecorded.sql?raw';
+import clearSql from './sql/clear-attempt.sql?raw';
+import clearAllSql from './sql/clear-attempts.sql?raw';
+
+const listStatement = db.prepare<[{ post_id: string | null }], PublishAttempt>(listSql);
+const listUnrecordedStatement = db.prepare<[], PublishAttempt>(listUnrecordedSql);
+const startStatement = db.prepare(startSql);
+const failStatement = db.prepare(failSql);
+const failInterruptedStatement = db.prepare(failInterruptedSql);
+const markUnrecordedStatement = db.prepare(markUnrecordedSql);
+const clearStatement = db.prepare(clearSql);
+const clearAllStatement = db.prepare(clearAllSql);
 
 export function listAttempts(postId?: string): PublishAttempt[] {
-	const query = db.select().from(publishAttempts);
-	return postId ? query.where(eq(publishAttempts.postId, postId)).all() : query.all();
+	return listStatement.all({ post_id: postId ?? null });
 }
 
 /** Marks the platform as publishing. Returns false while it is publishing or awaits recording. */
 export function startAttempt(postId: string, platform: PlatformId, now = Date.now()): boolean {
-	const existing = db
-		.select()
-		.from(publishAttempts)
-		.where(and(eq(publishAttempts.postId, postId), eq(publishAttempts.platform, platform)))
-		.get();
-	if (existing && existing.status !== 'failed') return false;
-	const row = { postId, platform, status: 'publishing' as const, error: null, updatedAt: now };
-	db.insert(publishAttempts)
-		.values(row)
-		.onConflictDoUpdate({ target: [publishAttempts.postId, publishAttempts.platform], set: row })
-		.run();
-	return true;
+	return startStatement.run({ post_id: postId, platform, updated_at: now }).changes > 0;
 }
 
 export function failAttempt(postId: string, platform: PlatformId, error: string, now = Date.now()) {
-	db.update(publishAttempts)
-		.set({ status: 'failed', error, updatedAt: now })
-		.where(and(eq(publishAttempts.postId, postId), eq(publishAttempts.platform, platform)))
-		.run();
+	failStatement.run({ post_id: postId, platform, error, updated_at: now });
 }
 
 export function clearAttempt(postId: string, platform: PlatformId) {
-	db.delete(publishAttempts)
-		.where(and(eq(publishAttempts.postId, postId), eq(publishAttempts.platform, platform)))
-		.run();
+	clearStatement.run({ post_id: postId, platform });
 }
 
 export function clearAttempts(postId: string) {
-	db.delete(publishAttempts).where(eq(publishAttempts.postId, postId)).run();
+	clearAllStatement.run({ post_id: postId });
 }
 
-/** Attempts left "publishing" by a restart can't be resumed; the platform may or may not have the post. */
 export function failInterruptedAttempts(now = Date.now()) {
-	db.update(publishAttempts)
-		.set({
-			status: 'failed',
-			error:
-				'Publishing was interrupted by a restart. Check the platform before trying again, or the post may appear twice.',
-			updatedAt: now
-		})
-		.where(eq(publishAttempts.status, 'publishing'))
-		.run();
+	failInterruptedStatement.run({ updated_at: now });
 }
 
 /** The post is live on the platform, but writing that to the repository failed. */
@@ -62,12 +52,17 @@ export function markUnrecorded(
 	error: string,
 	now = Date.now()
 ) {
-	db.update(publishAttempts)
-		.set({ status: 'unrecorded', ...result, error, updatedAt: now })
-		.where(and(eq(publishAttempts.postId, postId), eq(publishAttempts.platform, platform)))
-		.run();
+	markUnrecordedStatement.run({
+		post_id: postId,
+		platform,
+		remote_id: result.remoteId,
+		remote_url: result.remoteUrl,
+		published_at: result.publishedAt,
+		error,
+		updated_at: now
+	});
 }
 
 export function listUnrecorded(): PublishAttempt[] {
-	return db.select().from(publishAttempts).where(eq(publishAttempts.status, 'unrecorded')).all();
+	return listUnrecordedStatement.all();
 }
